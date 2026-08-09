@@ -1,0 +1,999 @@
+<meta charset="utf-8" />
+<title>Galaxy Book5 360 &mdash; Savings Ledger</title>
+<style>
+  :root{
+    --ink:#1C2B22;
+    --paper:#E9E4D2;
+    --card:#FBF8EF;
+    --rule:#C7BB98;
+    --slate:#5B6856;
+    --gold:#A97A22;
+    --moss:#3D6B49;
+    --rust:#A2432B;
+    --shadow: 0 1px 0 rgba(28,43,34,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --ink:#EAE4D0;
+      --paper:#10160F;
+      --card:#182016;
+      --rule:#33402E;
+      --slate:#97A08C;
+      --gold:#D2A23F;
+      --moss:#5C9A6C;
+      --rust:#C2654A;
+      --shadow: 0 1px 0 rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E;
+    --slate:#97A08C; --gold:#D2A23F; --moss:#5C9A6C; --rust:#C2654A;
+    --shadow: 0 1px 0 rgba(0,0,0,.3);
+  }
+  :root[data-theme="light"]{
+    --ink:#1C2B22; --paper:#E9E4D2; --card:#FBF8EF; --rule:#C7BB98;
+    --slate:#5B6856; --gold:#A97A22; --moss:#3D6B49; --rust:#A2432B;
+    --shadow: 0 1px 0 rgba(28,43,34,.06);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sheet{
+    max-width:800px;
+    margin:0 auto;
+    padding:2.5rem 1.5rem 4rem;
+  }
+  .serif{ font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+  .mono{
+    font-family: "SF Mono", "Cascadia Mono", Consolas, "Roboto Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .eyebrow{
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--slate);
+    font-weight:600;
+  }
+
+  header.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:1rem;
+    padding-bottom:1.5rem;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:1.2rem;
+  }
+  header.top h1{
+    margin:.2rem 0 .35rem;
+    font-size:1.9rem;
+    font-weight:600;
+    text-wrap:balance;
+  }
+  .spec-line{
+    color:var(--slate);
+    font-size:.92rem;
+  }
+  .countdown{
+    text-align:right;
+    flex-shrink:0;
+    border:1px solid var(--rule);
+    border-radius:7px;
+    padding:.55rem .8rem;
+    background:var(--card);
+    box-shadow:var(--shadow);
+  }
+  .countdown .num{
+    font-size:1.6rem;
+    font-weight:700;
+    color:var(--gold);
+    line-height:1;
+  }
+  .countdown .lbl{
+    font-size:.68rem;
+    color:var(--slate);
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    margin-top:.2rem;
+  }
+
+  .sync-bar{
+    display:flex;
+    align-items:center;
+    gap:.7rem;
+    flex-wrap:wrap;
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:7px;
+    padding:.6rem .8rem;
+    margin-bottom:2rem;
+    font-size:.8rem;
+    color:var(--slate);
+  }
+  .sync-bar .copy-btn{
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:7px;
+    padding:.35rem .7rem;
+    font-weight:600;
+    font-size:.78rem;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .sync-bar .copy-btn:hover{ opacity:.88; }
+  .sync-bar .copy-status{ color:var(--moss); font-weight:600; }
+
+  section{ margin-bottom:2.25rem; }
+  h2{
+    font-size:1rem;
+    font-weight:700;
+    margin:0 0 .3rem;
+    display:flex;
+    align-items:baseline;
+    gap:.5rem;
+  }
+  h2 .count{
+    font-size:.75rem;
+    color:var(--slate);
+    font-weight:400;
+  }
+  .section-sub{
+    font-size:.82rem;
+    color:var(--slate);
+    margin:0 0 .9rem;
+  }
+
+  .goal-card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:12px;
+    padding:1.5rem 1.5rem 1.7rem;
+    box-shadow:var(--shadow);
+  }
+  .goal-figures{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:1rem;
+    margin-bottom:1rem;
+  }
+  .saved-amount{
+    font-size:2.5rem;
+    font-weight:700;
+  }
+  .saved-amount .of{
+    font-size:1.1rem;
+    font-weight:400;
+    color:var(--slate);
+  }
+  .track{
+    position:relative;
+    height:10px;
+    border-radius:99px;
+    background:var(--rule);
+    margin-bottom:.4rem;
+  }
+  .track .fill{
+    height:100%;
+    background:var(--moss);
+    border-radius:99px;
+    width:0%;
+  }
+  .track .plan-marker{
+    position:absolute;
+    top:-3px;
+    width:2px;
+    height:16px;
+    background:var(--gold);
+    left:0%;
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .track .fill{ transition:width .6s cubic-bezier(.4,0,.2,1); }
+  }
+  .track-caption{
+    font-size:.72rem;
+    color:var(--slate);
+    margin-bottom:1rem;
+  }
+  .track-caption .dot{ color:var(--gold); }
+  .stat-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1rem;
+    border-top:1px solid var(--rule);
+    padding-top:1rem;
+  }
+  @media (max-width:560px){ .stat-row{ grid-template-columns:repeat(2,1fr); } }
+  .stat-row .stat .v{
+    font-size:1.15rem;
+    font-weight:700;
+  }
+  .stat-row .stat .k{
+    font-size:.72rem;
+    color:var(--slate);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin-top:.1rem;
+  }
+  .goal-edit{
+    display:flex;
+    gap:1rem;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    margin-top:1.2rem;
+    padding-top:1rem;
+    border-top:1px solid var(--rule);
+    font-size:.85rem;
+  }
+  .goal-edit label{
+    display:flex;
+    flex-direction:column;
+    gap:.3rem;
+    color:var(--slate);
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .goal-note{
+    font-size:.78rem;
+    color:var(--slate);
+    margin-top:.7rem;
+  }
+  input, select, .btn{
+    font-family:inherit;
+    font-size:.92rem;
+  }
+  input[type="number"], input[type="date"], input[type="text"], select{
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:7px;
+    padding:.4rem .55rem;
+    color:var(--ink);
+    width:100%;
+  }
+  input:focus-visible, select:focus-visible, .btn:focus-visible, .icon-btn:focus-visible, .status-toggle button:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+
+  .log-form{
+    display:flex;
+    gap:.6rem;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    margin-bottom:1.2rem;
+  }
+  .log-form label{
+    display:flex;
+    flex-direction:column;
+    gap:.3rem;
+    font-size:.72rem;
+    color:var(--slate);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .log-form .amt-field{ width:8rem; }
+  .log-form .source-field{ flex:1; min-width:9rem; }
+  .log-form .date-field{ width:9.5rem; }
+  .status-toggle{
+    display:flex;
+    border:1px solid var(--rule);
+    border-radius:7px;
+    overflow:hidden;
+  }
+  .status-toggle button{
+    border:none;
+    background:var(--paper);
+    color:var(--slate);
+    padding:.4rem .7rem;
+    font-size:.82rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .status-toggle button.active[data-status="earned"]{ background:var(--gold); color:var(--card); }
+  .status-toggle button.active[data-status="received"]{ background:var(--moss); color:var(--card); }
+  .btn{
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:7px;
+    padding:.5rem 1rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .btn:hover{ opacity:.88; }
+
+  .ledger{
+    border-top:1px solid var(--ink);
+  }
+  .ledger .row{
+    display:grid;
+    grid-template-columns:5.5rem 1fr auto auto auto;
+    gap:.6rem;
+    align-items:center;
+    padding:.6rem 0;
+    border-bottom:1px solid var(--rule);
+  }
+  @media (max-width:600px){
+    .ledger .row{ grid-template-columns:1fr auto; row-gap:.3rem; }
+    .ledger .row .date{ order:1; }
+    .ledger .row .source{ order:2; }
+    .ledger .row .amount{ order:3; text-align:left; }
+    .ledger .row .status-pill{ order:4; }
+    .ledger .row .row-actions{ order:5; }
+  }
+  .ledger .row .date{ color:var(--slate); font-size:.85rem; }
+  .ledger .row .source{ font-size:.9rem; }
+  .ledger .row .amount{ font-weight:600; text-align:right; }
+  .status-pill{
+    font-size:.65rem;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    padding:.2rem .5rem;
+    border-radius:99px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .status-pill.earned{ background:color-mix(in srgb, var(--gold) 20%, transparent); color:var(--gold); }
+  .status-pill.received{ background:color-mix(in srgb, var(--moss) 20%, transparent); color:var(--moss); }
+  .row-actions{ display:flex; gap:.4rem; white-space:nowrap; }
+  .ledger .empty{
+    padding:1rem 0;
+    color:var(--slate);
+    font-size:.88rem;
+    font-style:italic;
+  }
+  .icon-btn{
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:.78rem;
+    padding:.2rem .3rem;
+    font-weight:600;
+  }
+  .icon-btn.mark{ color:var(--moss); }
+  .icon-btn.remove{ color:var(--rust); }
+  .icon-btn:hover{ text-decoration:underline; }
+  .ledger .summary-row{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:.3rem 1rem;
+    padding:.8rem 0 0;
+    border-top:2px solid var(--ink);
+    margin-top:.2rem;
+    font-size:.88rem;
+  }
+  .ledger .summary-row .label{ color:var(--slate); }
+  .ledger .summary-row .val{ font-weight:700; text-align:right; }
+  .ledger .summary-row .val.received{ color:var(--moss); }
+  .ledger .summary-row .val.outstanding{ color:var(--gold); }
+
+  .timeline{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1rem;
+  }
+  .timeline .step{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:10px;
+    padding:.9rem 1rem;
+  }
+  .timeline .step .when{
+    font-size:.68rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--gold);
+    font-weight:700;
+    margin-bottom:.3rem;
+  }
+  .timeline .step .what{ font-size:.85rem; }
+  @media (max-width:600px){ .timeline{ grid-template-columns:1fr; } }
+
+  .price-grid{ display:grid; gap:1rem; }
+  @media (min-width:560px){ .price-grid{ grid-template-columns:1fr 1fr; } }
+  .price-card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-left:4px solid var(--rule);
+    border-radius:10px;
+    padding:1rem 1.1rem;
+  }
+  .price-card.cheapest{ border-left-color:var(--moss); }
+  .price-card .retailer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:.5rem;
+  }
+  .price-card .retailer a{ color:var(--ink); text-decoration:none; font-weight:700; font-size:.95rem; }
+  .price-card .retailer a:hover{ text-decoration:underline; }
+  .badge{
+    font-size:.65rem;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    background:var(--moss);
+    color:var(--card);
+    padding:.15rem .45rem;
+    border-radius:99px;
+  }
+  .price-card .price-row{
+    display:flex;
+    align-items:baseline;
+    gap:.4rem;
+    margin-bottom:.3rem;
+  }
+  .price-card .price-row .curr{ font-size:.9rem; color:var(--slate); }
+  .price-card .price-row input{
+    font-size:1.4rem;
+    font-weight:700;
+    border:none;
+    background:none;
+    padding:0;
+    width:auto;
+    max-width:8rem;
+  }
+  .price-card .price-row input:focus-visible{ outline:2px solid var(--gold); border-radius:4px; }
+  .delta{ font-size:.8rem; font-weight:600; }
+  .delta.up{ color:var(--rust); }
+  .delta.down{ color:var(--moss); }
+  .delta.flat{ color:var(--slate); }
+  .price-card .meta{
+    font-size:.72rem;
+    color:var(--slate);
+    margin-top:.4rem;
+  }
+  .gap-line{
+    font-size:.85rem;
+    margin-top:1rem;
+    padding-top:.9rem;
+    border-top:1px solid var(--rule);
+  }
+  .gap-line strong{ color:var(--gold); }
+
+  .bbd-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:1rem;
+    font-size:.85rem;
+  }
+  .bbd-table caption{
+    text-align:left;
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--slate);
+    margin-bottom:.5rem;
+  }
+  .bbd-table th, .bbd-table td{
+    text-align:left;
+    padding:.4rem .5rem;
+    border-bottom:1px solid var(--rule);
+  }
+  .bbd-table th{ color:var(--slate); font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; }
+  .bbd-table td.amt{ text-align:right; }
+
+  .disclaimer{
+    font-size:.78rem;
+    color:var(--slate);
+    border-top:1px dashed var(--rule);
+    padding-top:1.2rem;
+    margin-top:2.5rem;
+  }
+  .disclaimer p{ margin:.35rem 0; }
+</style>
+
+<div class="sheet">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Savings ledger</div>
+      <h1 class="serif" id="product-name">Samsung Galaxy Book5 360 Ultra 7</h1>
+      <div class="spec-line">Intel Core Ultra 7 256V &middot; 16GB RAM / 512GB SSD &middot; 15.6&Prime; AMOLED, S Pen</div>
+    </div>
+    <div class="countdown">
+      <div class="num mono" id="days-left">&mdash;</div>
+      <div class="lbl">days to 20 Sep</div>
+    </div>
+  </header>
+
+  <div class="sync-bar">
+    <span>This page's link carries your data. After adding or changing anything, copy the link and open it on your other device to keep going.</span>
+    <button class="copy-btn" id="copy-link-btn" type="button">Copy link</button>
+    <span class="copy-status" id="copy-status" hidden>Copied</span>
+  </div>
+
+  <section>
+    <div class="goal-card">
+      <div class="goal-figures">
+        <div class="saved-amount mono">
+          <span id="saved-total">&#8377;0</span>
+          <span class="of">of <span id="target-display">&#8377;0</span></span>
+        </div>
+      </div>
+      <div class="track">
+        <div class="fill" id="progress-fill"></div>
+        <div class="plan-marker" id="plan-marker" title="Original tuition-plan estimate"></div>
+      </div>
+      <div class="track-caption"><span class="dot">&#9679;</span> gold mark = where your original tuition-plan estimate (&#8377;1,13,600) would land on this bar</div>
+      <div class="stat-row">
+        <div class="stat">
+          <div class="v mono" id="remaining-amount">&#8377;0</div>
+          <div class="k">Still to save</div>
+        </div>
+        <div class="stat">
+          <div class="v mono" id="per-day">&#8377;0</div>
+          <div class="k">Needed per day</div>
+        </div>
+        <div class="stat">
+          <div class="v mono" id="per-week">&#8377;0</div>
+          <div class="k">Needed per week</div>
+        </div>
+        <div class="stat">
+          <div class="v mono" id="outstanding-amount">&#8377;0</div>
+          <div class="k">Earned, unpaid</div>
+        </div>
+      </div>
+      <div class="goal-edit">
+        <label>Target budget
+          <input type="number" id="target-input" min="0" step="500" />
+        </label>
+        <label>Buy-by date
+          <input type="date" id="target-date-input" />
+        </label>
+      </div>
+      <div class="goal-note">Initial target &#8377;1,10,000 &middot; preferred range up to &#8377;1,20,000. Tip: keep a &#8377;5,000&ndash;10,000 buffer for accessories (bag, mouse, stand).</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Earnings log <span class="count" id="entry-count"></span></h2>
+    <p class="section-sub">Log it the day it happens. <strong>Earned</strong> = you did the work (taught the class) but haven't been paid yet. <strong>Received</strong> = money actually in hand &mdash; only Received counts toward "saved" above.</p>
+    <div class="log-form">
+      <label class="date-field">Date
+        <input type="date" id="entry-date" />
+      </label>
+      <label class="source-field">Source
+        <input type="text" id="entry-source" placeholder="e.g. Rayan's tuition" />
+      </label>
+      <label class="amt-field">Amount
+        <input type="number" id="entry-amount" min="0" step="50" placeholder="&#8377;" />
+      </label>
+      <label>Status
+        <div class="status-toggle" id="status-toggle">
+          <button type="button" data-status="earned" class="active">Earned</button>
+          <button type="button" data-status="received">Received</button>
+        </div>
+      </label>
+      <button class="btn" id="add-entry">Add entry</button>
+    </div>
+    <div class="ledger" id="ledger-body">
+      <div class="empty">No entries yet &mdash; log your first one above.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Timeline</h2>
+    <div class="timeline">
+      <div class="step">
+        <div class="when">August</div>
+        <div class="what">No tuition fee collection &mdash; keep teaching.</div>
+      </div>
+      <div class="step">
+        <div class="when">By 20 September</div>
+        <div class="what">Collect Aug + Sep + Oct advance + other session income &mdash; planned &#8377;1,13,600.</div>
+      </div>
+      <div class="step">
+        <div class="when">Big Billion Days &middot; late Sep / early Oct</div>
+        <div class="what">Buy the laptop at the best price across both stores.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Market watch</h2>
+    <div class="price-grid">
+      <div class="price-card" id="card-amazon">
+        <div class="retailer">
+          <a href="https://www.amazon.in/Samsung-Galaxy-Built-Touchscreen-Included/dp/B0DY79DQQ5" target="_blank" rel="noopener">Amazon.in &#8599;</a>
+          <span class="badge" id="badge-amazon" hidden>Cheaper</span>
+        </div>
+        <div class="price-row">
+          <span class="curr">&#8377;</span>
+          <input type="number" class="mono" id="price-amazon" min="0" step="100" />
+        </div>
+        <div class="delta mono" id="delta-amazon"></div>
+        <div class="meta">Last checked <span id="updated-amazon">&mdash;</span></div>
+      </div>
+      <div class="price-card" id="card-flipkart">
+        <div class="retailer">
+          <a href="https://www.flipkart.com/samsung-galaxy-book5-360-ai-pc-full-metal-chasis-intel-core-ultra-7-256v-16-gb-512-gb-ssd-windows-11-home-np750qha-2-1-laptop/p/itm85276ee19425e" target="_blank" rel="noopener">Flipkart &#8599;</a>
+          <span class="badge" id="badge-flipkart" hidden>Cheaper</span>
+        </div>
+        <div class="price-row">
+          <span class="curr">&#8377;</span>
+          <input type="number" class="mono" id="price-flipkart" min="0" step="100" />
+        </div>
+        <div class="delta mono" id="delta-flipkart"></div>
+        <div class="meta">Last checked <span id="updated-flipkart">&mdash;</span></div>
+      </div>
+    </div>
+    <div class="gap-line" id="gap-line"></div>
+    <table class="bbd-table">
+      <caption>Your Big Billion Days price research (for reference, not live)</caption>
+      <thead><tr><th>Scenario</th><th class="amt">Estimated price</th></tr></thead>
+      <tbody>
+        <tr><td>Conservative</td><td class="amt mono">&#8377;1,18,000</td></tr>
+        <tr><td>Most likely</td><td class="amt mono">&#8377;1,14,999&ndash;1,17,999</td></tr>
+        <tr><td>Best case</td><td class="amt mono">&#8377;1,09,999&ndash;1,12,999</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="disclaimer">
+    <p><strong>How this page works.</strong> There's no account or server &mdash; your data is encoded right into this page's URL, and also cached in this browser for convenience. The URL is the portable copy: after any change, use "Copy link" above and open that exact link on your phone, laptop, wherever &mdash; it'll load with everything up to date. An old, un-updated link will show old data.</p>
+    <p><strong>Prices</strong> here are a manual snapshot &mdash; edit either price field yourself whenever you've checked the live listing on Amazon or Flipkart.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var LS_KEY = "gb5tracker.v3";
+  var RUPEE = "₹";
+  var REFERENCE_PLAN_TOTAL = 113600;
+
+  var BASELINE = {
+    target: 110000,
+    targetDate: "2026-09-20",
+    entries: [],
+    prices: {
+      amazon:   { price: 116199, updated: "2026-08-09" },
+      flipkart: { price: 147590, updated: "2026-08-09" }
+    }
+  };
+
+  function cloneBaseline(){
+    return {
+      target: BASELINE.target,
+      targetDate: BASELINE.targetDate,
+      entries: [],
+      prices: {
+        amazon:   Object.assign({}, BASELINE.prices.amazon),
+        flipkart: Object.assign({}, BASELINE.prices.flipkart)
+      }
+    };
+  }
+
+  function mergeState(base, saved){
+    if (!saved || typeof saved !== "object") return base;
+    if (typeof saved.target === "number") base.target = saved.target;
+    if (typeof saved.targetDate === "string") base.targetDate = saved.targetDate;
+    if (Array.isArray(saved.entries)) base.entries = saved.entries;
+    if (saved.prices) {
+      ["amazon", "flipkart"].forEach(function (site) {
+        var savedSite = saved.prices[site];
+        if (savedSite && typeof savedSite.price === "number" && savedSite.updated) {
+          base.prices[site] = savedSite;
+        }
+      });
+    }
+    return base;
+  }
+
+  function toBase64Url(str){
+    var bytes = new TextEncoder().encode(str);
+    var binary = "";
+    for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  function fromBase64Url(b64){
+    var padded = b64.replace(/-/g, "+").replace(/_/g, "/");
+    while (padded.length % 4) padded += "=";
+    var binary = atob(padded);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  function readHashState(){
+    try {
+      var hash = window.location.hash || "";
+      var match = hash.match(/(?:^#|&)s=([^&]+)/);
+      if (!match) return null;
+      return JSON.parse(fromBase64Url(match[1]));
+    } catch (e) { return null; }
+  }
+
+  function readLocalState(){
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  function loadState(){
+    var fromHash = readHashState();
+    if (fromHash) return mergeState(cloneBaseline(), fromHash);
+    var fromLocal = readLocalState();
+    if (fromLocal) return mergeState(cloneBaseline(), fromLocal);
+    return cloneBaseline();
+  }
+
+  var state = loadState();
+
+  function persistState(){
+    var json = JSON.stringify(state);
+    try { localStorage.setItem(LS_KEY, json); } catch (e) { /* storage unavailable */ }
+    try {
+      var encoded = toBase64Url(json);
+      var newHash = "#s=" + encoded;
+      if (window.location.hash !== newHash) {
+        history.replaceState(null, "", newHash);
+      }
+    } catch (e) { /* URL update unavailable */ }
+  }
+
+  var $ = function(id){ return document.getElementById(id); };
+  var fmt = function(n){
+    n = Math.round(n || 0);
+    return RUPEE + n.toLocaleString("en-IN");
+  };
+  var fmtDate = function(iso){
+    if (!iso) return "—";
+    var d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  };
+  var todayISO = function(){
+    var d = new Date();
+    var tz = d.getTimezoneOffset() * 60000;
+    return new Date(d - tz).toISOString().slice(0, 10);
+  };
+
+  function receivedTotal(){
+    return state.entries.reduce(function(sum, e){
+      return e.status === "received" ? sum + (Number(e.amount) || 0) : sum;
+    }, 0);
+  }
+
+  function earnedTotal(){
+    return state.entries.reduce(function(sum, e){ return sum + (Number(e.amount) || 0); }, 0);
+  }
+
+  function escapeHtml(str){
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function render(){
+    var targetEl = $("target-input");
+    var dateEl = $("target-date-input");
+    if (document.activeElement !== targetEl) targetEl.value = state.target;
+    if (document.activeElement !== dateEl) dateEl.value = state.targetDate;
+
+    var saved = receivedTotal();
+    var earned = earnedTotal();
+    var outstanding = Math.max(0, earned - saved);
+    var target = Number(state.target) || 0;
+    var remaining = Math.max(0, target - saved);
+    var pct = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
+    var planPct = target > 0 ? Math.min(100, (REFERENCE_PLAN_TOTAL / target) * 100) : 0;
+
+    $("saved-total").textContent = fmt(saved);
+    $("target-display").textContent = fmt(target);
+    $("remaining-amount").textContent = fmt(remaining);
+    $("outstanding-amount").textContent = fmt(outstanding);
+    $("progress-fill").style.width = pct + "%";
+    $("plan-marker").style.left = planPct + "%";
+
+    var today = new Date(todayISO() + "T00:00:00");
+    var buyBy = new Date(state.targetDate + "T00:00:00");
+    var msPerDay = 86400000;
+    var daysLeft = Math.ceil((buyBy - today) / msPerDay);
+    $("days-left").textContent = daysLeft > 0 ? daysLeft : (daysLeft === 0 ? "0" : "past");
+
+    var perDay = daysLeft > 0 ? remaining / daysLeft : remaining;
+    var perWeek = perDay * 7;
+    $("per-day").textContent = remaining > 0 ? fmt(perDay) : "—";
+    $("per-week").textContent = remaining > 0 ? fmt(perWeek) : "—";
+
+    var count = state.entries.length;
+    $("entry-count").textContent = count ? "(" + count + " " + (count === 1 ? "entry" : "entries") + ")" : "";
+
+    var ledgerBody = $("ledger-body");
+    ledgerBody.innerHTML = "";
+    if (!count) {
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No entries yet — log your first one above.";
+      ledgerBody.appendChild(empty);
+    } else {
+      var sorted = state.entries.slice().sort(function(a, b){ return b.date.localeCompare(a.date); });
+      sorted.forEach(function(entry){
+        var row = document.createElement("div");
+        row.className = "row";
+        var isReceived = entry.status === "received";
+        row.innerHTML =
+          '<div class="date mono">' + fmtDate(entry.date) + '</div>' +
+          '<div class="source">' + (entry.source ? escapeHtml(entry.source) : "&nbsp;") + '</div>' +
+          '<div class="amount mono">' + fmt(entry.amount) + '</div>' +
+          '<div class="status-pill ' + (isReceived ? "received" : "earned") + '">' + (isReceived ? "Received" : "Earned") + '</div>' +
+          '<div class="row-actions">' +
+            (isReceived ? "" : '<button class="icon-btn mark" data-id="' + entry.id + '">Mark received</button>') +
+            '<button class="icon-btn remove" data-id="' + entry.id + '">Remove</button>' +
+          '</div>';
+        ledgerBody.appendChild(row);
+      });
+      var summaryRow = document.createElement("div");
+      summaryRow.className = "summary-row";
+      summaryRow.innerHTML =
+        '<div class="label">Received (counts toward saved)</div><div class="val received">' + fmt(saved) + '</div>' +
+        '<div class="label">Earned, not yet received</div><div class="val outstanding">' + fmt(outstanding) + '</div>' +
+        '<div class="label">Total earned</div><div class="val">' + fmt(earned) + '</div>';
+      ledgerBody.appendChild(summaryRow);
+    }
+
+    renderPrice("amazon");
+    renderPrice("flipkart");
+
+    var aPrice = state.prices.amazon.price;
+    var fPrice = state.prices.flipkart.price;
+    $("badge-amazon").hidden = !(aPrice < fPrice);
+    $("badge-flipkart").hidden = !(fPrice < aPrice);
+    document.getElementById("card-amazon").classList.toggle("cheapest", aPrice < fPrice);
+    document.getElementById("card-flipkart").classList.toggle("cheapest", fPrice < aPrice);
+
+    var cheapest = Math.min(aPrice, fPrice);
+    var cheapestName = aPrice <= fPrice ? "Amazon" : "Flipkart";
+    var gapEl = $("gap-line");
+    if (saved >= cheapest) {
+      gapEl.innerHTML = "You've already saved enough for the <strong>" + cheapestName + "</strong> price of " + fmt(cheapest) + ".";
+    } else {
+      gapEl.innerHTML = "You're <strong>" + fmt(cheapest - saved) + "</strong> short of today's cheapest price (" + cheapestName + ", " + fmt(cheapest) + ").";
+    }
+  }
+
+  function renderPrice(site){
+    var data = state.prices[site];
+    var input = $("price-" + site);
+    if (document.activeElement !== input) input.value = data.price;
+    $("updated-" + site).textContent = fmtDate(data.updated);
+
+    var deltaEl = $("delta-" + site);
+    if (typeof data.prevPrice === "number" && data.prevPrice !== data.price) {
+      var diff = data.price - data.prevPrice;
+      deltaEl.textContent = (diff > 0 ? "▲ " : "▼ ") + fmt(Math.abs(diff)) + " vs last check";
+      deltaEl.className = "delta mono " + (diff > 0 ? "up" : "down");
+    } else {
+      deltaEl.textContent = "No change since last check";
+      deltaEl.className = "delta mono flat";
+    }
+  }
+
+  $("target-input").addEventListener("input", function(){
+    var v = Number(this.value);
+    state.target = isNaN(v) ? 0 : v;
+    persistState();
+    render();
+  });
+
+  $("target-date-input").addEventListener("change", function(){
+    if (this.value) state.targetDate = this.value;
+    persistState();
+    render();
+  });
+
+  var pendingStatus = "earned";
+  $("status-toggle").addEventListener("click", function(e){
+    var btn = e.target.closest ? e.target.closest("button") : null;
+    if (!btn) return;
+    pendingStatus = btn.getAttribute("data-status");
+    var buttons = this.querySelectorAll("button");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].classList.toggle("active", buttons[i] === btn);
+    }
+  });
+
+  $("add-entry").addEventListener("click", function(){
+    var dateEl = $("entry-date");
+    var sourceEl = $("entry-source");
+    var amountEl = $("entry-amount");
+    var amount = Number(amountEl.value);
+    if (!amount || amount <= 0) { amountEl.focus(); return; }
+    var date = dateEl.value || todayISO();
+    state.entries.push({
+      id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      date: date,
+      source: (sourceEl.value || "").slice(0, 60),
+      amount: amount,
+      status: pendingStatus
+    });
+    amountEl.value = "";
+    sourceEl.value = "";
+    persistState();
+    render();
+  });
+
+  $("ledger-body").addEventListener("click", function(e){
+    var markBtn = e.target.closest ? e.target.closest(".icon-btn.mark") : null;
+    var removeBtn = e.target.closest ? e.target.closest(".icon-btn.remove") : null;
+    if (markBtn) {
+      var markId = markBtn.getAttribute("data-id");
+      state.entries.forEach(function(entry){
+        if (entry.id === markId) entry.status = "received";
+      });
+      persistState();
+      render();
+      return;
+    }
+    if (removeBtn) {
+      var removeId = removeBtn.getAttribute("data-id");
+      state.entries = state.entries.filter(function(entry){ return entry.id !== removeId; });
+      persistState();
+      render();
+    }
+  });
+
+  ["amazon", "flipkart"].forEach(function(site){
+    $("price-" + site).addEventListener("change", function(){
+      var v = Number(this.value);
+      if (isNaN(v) || v < 0) return;
+      var data = state.prices[site];
+      data.prevPrice = data.price;
+      data.price = v;
+      data.updated = todayISO();
+      persistState();
+      render();
+    });
+  });
+
+  $("copy-link-btn").addEventListener("click", function(){
+    persistState();
+    var url = window.location.href;
+    var statusEl = $("copy-status");
+    function showCopied(){
+      statusEl.hidden = false;
+      setTimeout(function(){ statusEl.hidden = true; }, 2000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(showCopied, function(){ fallbackCopy(url, showCopied); });
+    } else {
+      fallbackCopy(url, showCopied);
+    }
+  });
+
+  function fallbackCopy(text, onDone){
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      onDone();
+    } catch (e) { /* copy unavailable, user can select the URL bar manually */ }
+  }
+
+  $("entry-date").value = todayISO();
+
+  persistState();
+  render();
+})();
+</script>
