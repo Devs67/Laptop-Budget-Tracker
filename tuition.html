@@ -1,0 +1,928 @@
+<meta charset="utf-8" />
+<title>Tuition Log &amp; Invoices</title>
+<style>
+  :root{
+    --ink:#1C2B22;
+    --paper:#F6F1E4;
+    --card:#FFFDF6;
+    --rule:#DCD3B8;
+    --track-bg:#DCD3B8;
+    --slate:#5B6856;
+    --gold:#A97A22;
+    --gold-soft:#A97A2226;
+    --gold-fill:#A97A2280;
+    --moss:#3D6B49;
+    --moss-soft:#3D6B4940;
+    --rust:#A2432B;
+    --grid-line:#1C2B2209;
+    --shadow: 0 1px 0 rgba(28,43,34,.06);
+  }
+  :root[data-theme="dark"]{
+    --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E; --track-bg:#2E2A20;
+    --slate:#97A08C; --gold:#D2A23F; --gold-soft:#D2A23F26; --gold-fill:#D2A23F80; --moss:#5C9A6C; --moss-soft:#5C9A6C40; --rust:#C2654A;
+    --grid-line:#EAE4D00D;
+    --shadow: 0 1px 0 rgba(0,0,0,.3);
+  }
+  :root[data-theme="light"]{
+    --ink:#1C2B22; --paper:#F6F1E4; --card:#FFFDF6; --rule:#DCD3B8; --track-bg:#DCD3B8;
+    --slate:#5B6856; --gold:#A97A22; --gold-soft:#A97A2226; --gold-fill:#A97A2280; --moss:#3D6B49; --moss-soft:#3D6B4940; --rust:#A2432B;
+    --grid-line:#1C2B2209;
+    --shadow: 0 1px 0 rgba(28,43,34,.06);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:28px 28px;
+    color:var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sheet{
+    max-width:800px;
+    margin:0 auto;
+    padding:2.5rem 1.5rem 4rem;
+  }
+  .serif{ font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+  .mono{
+    font-family: "SF Mono", "Cascadia Mono", Consolas, "Roboto Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .eyebrow{
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--slate);
+    font-weight:600;
+  }
+
+  header.top{
+    padding-bottom:1.5rem;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:1.2rem;
+  }
+  header.top h1{
+    margin:.2rem 0 .35rem;
+    font-size:1.9rem;
+    font-weight:600;
+    text-wrap:balance;
+  }
+  .spec-line{ color:var(--slate); font-size:.92rem; }
+
+  .theme-toggle-wrap{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:1.6rem;
+  }
+  .page-nav{
+    display:flex;
+    gap:.25rem;
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:99px;
+    padding:.25rem;
+    width:fit-content;
+  }
+  .page-nav a{
+    padding:.4rem 1rem;
+    border-radius:99px;
+    font-size:.82rem;
+    font-weight:600;
+    text-decoration:none;
+    color:var(--slate);
+  }
+  .page-nav a.active{ background:var(--ink); color:var(--paper); }
+  .page-nav a:hover:not(.active){ color:var(--gold); }
+  .theme-toggle{
+    position:relative;
+    width:56px;
+    height:28px;
+    border-radius:99px;
+    border:1px solid var(--rule);
+    background:var(--card);
+    cursor:pointer;
+    padding:0;
+  }
+  .theme-toggle .icon{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:.75rem;
+    line-height:1;
+    color:var(--slate);
+    pointer-events:none;
+  }
+  .theme-toggle .icon.sun{ left:6px; }
+  .theme-toggle .icon.moon{ right:6px; }
+  .theme-toggle .knob{
+    position:absolute;
+    top:2px;
+    left:2px;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:var(--ink);
+  }
+  :root[data-theme="dark"] .theme-toggle .knob{ left:30px; background:var(--gold); }
+  @media (prefers-reduced-motion: no-preference){
+    .theme-toggle .knob{ transition:left .25s ease, background .25s ease; }
+  }
+
+  section{ margin-bottom:2.25rem; }
+  h2{
+    font-size:1rem;
+    font-weight:700;
+    margin:0 0 .3rem;
+    display:flex;
+    align-items:baseline;
+    gap:.5rem;
+  }
+  h2 .count{ font-size:.75rem; color:var(--slate); font-weight:400; }
+  .section-sub{ font-size:.82rem; color:var(--slate); margin:0 0 .9rem; }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:12px;
+    padding:1.3rem 1.4rem;
+    box-shadow:var(--shadow);
+  }
+
+  input, select, .btn{ font-family:inherit; font-size:.92rem; }
+  input[type="number"], input[type="date"], input[type="time"], input[type="text"], select{
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:7px;
+    padding:.4rem .55rem;
+    color:var(--ink);
+    width:100%;
+  }
+  input:focus-visible, select:focus-visible, .btn:focus-visible, .icon-btn:focus-visible, .student-btn:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+  .btn{
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:7px;
+    padding:.5rem 1rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .btn:hover{ opacity:.88; }
+  .btn.ghost{
+    background:none;
+    color:var(--ink);
+    border:1px solid var(--rule);
+  }
+  .btn.small{ padding:.35rem .7rem; font-size:.8rem; }
+
+  .add-child-row{
+    display:flex;
+    gap:.6rem;
+    flex-wrap:wrap;
+  }
+  .add-child-row input[name="new-child-name"]{ flex:1; min-width:8rem; }
+  .add-child-row input[name="new-child-rate"]{ width:8rem; }
+  .settings-field{
+    display:flex;
+    flex-direction:column;
+    gap:.3rem;
+    font-size:.72rem;
+    color:var(--slate);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin-bottom:1.1rem;
+  }
+
+  .student-buttons{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.7rem;
+    margin-bottom:1.2rem;
+  }
+  .student-btn{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:.2rem;
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:10px;
+    padding:.7rem 1.1rem;
+    cursor:pointer;
+    min-width:9.5rem;
+    text-align:left;
+  }
+  .student-btn:hover{ border-color:var(--gold); }
+  .student-btn.active{ box-shadow: inset 0 0 0 1px var(--ink); border-color:var(--ink); }
+  .student-btn .name{ font-weight:700; font-size:.98rem; }
+  .student-btn .owed{ font-size:.76rem; font-weight:600; color:var(--gold); }
+  .student-btn .owed.zero{ color:var(--moss); }
+
+  .student-placeholder{
+    color:var(--slate);
+    font-size:.88rem;
+    font-style:italic;
+    padding:1.2rem 0;
+  }
+  .student-detail .detail-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:1rem;
+    flex-wrap:wrap;
+    margin-bottom:.9rem;
+  }
+  .student-detail .detail-head h3{ margin:0; font-size:1.25rem; font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+  .student-detail .rate-edit{
+    display:flex;
+    align-items:center;
+    gap:.4rem;
+    font-size:.8rem;
+    color:var(--slate);
+  }
+  .student-detail .rate-edit input{ width:6.5rem; }
+  .student-detail .detail-totals{
+    display:flex;
+    gap:1.6rem;
+    flex-wrap:wrap;
+    margin-bottom:1rem;
+    padding-bottom:1rem;
+    border-bottom:1px solid var(--rule);
+  }
+  .student-detail .detail-totals .k{ font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--slate); }
+  .student-detail .detail-totals .v{ font-weight:700; font-size:1.05rem; }
+  .student-detail .detail-totals .v.owed{ color:var(--gold); }
+  .student-detail .detail-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:1rem;
+    padding-top:1rem;
+    border-top:1px solid var(--rule);
+  }
+
+  .ledger{ border-top:1px solid var(--ink); }
+  .ledger .row{
+    display:grid;
+    grid-template-columns:5.5rem 4.5rem 1fr auto auto auto;
+    gap:.6rem;
+    align-items:center;
+    padding:.55rem 0;
+    border-bottom:1px solid var(--rule);
+    font-size:.88rem;
+  }
+  @media (max-width:640px){
+    .ledger .row{ grid-template-columns:1fr auto; row-gap:.25rem; }
+  }
+  .ledger .row .date{ color:var(--slate); }
+  .ledger .row .time{ color:var(--slate); }
+  .ledger .row .amount{ font-weight:600; text-align:right; }
+  .paid-pill{
+    font-size:.62rem;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    padding:.2rem .5rem;
+    border-radius:99px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .paid-pill.owed{ background:var(--gold-soft); color:var(--gold); }
+  .paid-pill.paid{ background:var(--moss-soft); color:var(--moss); }
+  .row-actions{ display:flex; gap:.4rem; white-space:nowrap; }
+  .icon-btn{ background:none; border:none; cursor:pointer; font-size:.78rem; padding:.2rem .3rem; font-weight:600; }
+  .icon-btn.mark{ color:var(--moss); }
+  .icon-btn.remove{ color:var(--rust); }
+  .icon-btn:hover{ text-decoration:underline; }
+  .ledger .empty{ padding:1rem 0; color:var(--slate); font-size:.88rem; font-style:italic; }
+
+  .log-form{
+    display:flex;
+    gap:.6rem;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    margin-bottom:1.2rem;
+  }
+  .log-form label{
+    display:flex;
+    flex-direction:column;
+    gap:.3rem;
+    font-size:.72rem;
+    color:var(--slate);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .log-form .child-field{ min-width:9rem; }
+  .log-form .date-field{ width:9.5rem; }
+  .log-form .time-field{ width:8rem; }
+  .log-form .amt-field{ width:7.5rem; }
+  .log-form .note-field{ flex:1; min-width:8rem; }
+
+  .grand-total-line{ font-size:.92rem; }
+  .grand-total-line strong{ color:var(--gold); }
+
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(20,20,15,.55);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:2.5rem 1rem;
+    overflow-y:auto;
+    z-index:50;
+  }
+  .overlay[hidden]{ display:none; }
+  #invoice-panel{
+    background:#FFFFFF;
+    color:#1C2B22;
+    width:100%;
+    max-width:600px;
+    border-radius:10px;
+    padding:2rem 2.2rem;
+    box-shadow:0 12px 40px rgba(0,0,0,.3);
+  }
+  #invoice-panel .invoice-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    border-bottom:2px solid #1C2B22;
+    padding-bottom:1rem;
+    margin-bottom:1.2rem;
+  }
+  #invoice-panel .invoice-head h2{ margin:0; font-size:1.4rem; letter-spacing:.05em; color:#1C2B22; }
+  #invoice-panel .invoice-meta{ font-size:.8rem; color:#5B6856; text-align:right; }
+  #invoice-panel .parties{
+    display:flex;
+    justify-content:space-between;
+    gap:1rem;
+    margin-bottom:1.4rem;
+    font-size:.88rem;
+  }
+  #invoice-panel .parties .label{ font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:#5B6856; margin-bottom:.2rem; }
+  #invoice-panel table{ width:100%; border-collapse:collapse; margin-bottom:1rem; font-size:.88rem; }
+  #invoice-panel th, #invoice-panel td{ text-align:left; padding:.5rem .4rem; border-bottom:1px solid #DCD3B8; }
+  #invoice-panel th{ color:#5B6856; font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; }
+  #invoice-panel td.num{ text-align:right; }
+  #invoice-panel .total-row td{ font-weight:700; border-top:2px solid #1C2B22; border-bottom:none; font-size:1.05rem; }
+  #invoice-panel .invoice-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:.6rem;
+    margin-top:1.5rem;
+  }
+  #invoice-panel .invoice-empty{ font-size:.88rem; color:#5B6856; font-style:italic; padding:1rem 0; }
+
+  @media print{
+    body *{ visibility:hidden; }
+    #invoice-panel, #invoice-panel *{ visibility:visible; }
+    #invoice-panel{
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      max-width:none;
+      box-shadow:none;
+      border-radius:0;
+    }
+    .overlay{ position:static; background:none; padding:0; }
+    .no-print{ display:none !important; }
+  }
+
+  .disclaimer{
+    font-size:.78rem;
+    color:var(--slate);
+    border-top:1px dashed var(--rule);
+    padding-top:1.2rem;
+    margin-top:2.5rem;
+  }
+  .disclaimer p{ margin:.35rem 0; }
+</style>
+
+<div class="sheet">
+  <header class="top">
+    <div class="eyebrow">Tuition log</div>
+    <h1 class="serif">Sessions &amp; Invoices</h1>
+    <div class="spec-line">Log each class as it happens, then click a student to see their sessions, totals, and invoice.</div>
+  </header>
+
+  <div class="theme-toggle-wrap">
+    <nav class="page-nav">
+      <a href="index.html">Savings</a>
+      <a href="tuition.html" class="active">Tuition</a>
+    </nav>
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch between light and dark background" aria-pressed="false">
+      <span class="icon sun">&#9728;</span>
+      <span class="icon moon">&#9790;</span>
+      <span class="knob"></span>
+    </button>
+  </div>
+
+  <section>
+    <h2>Settings</h2>
+    <div class="card">
+      <label class="settings-field">Invoice from (your name)
+        <input type="text" id="invoice-from" placeholder="e.g. Dev" />
+      </label>
+      <div class="add-child-row">
+        <input type="text" name="new-child-name" id="new-child-name" placeholder="Student name" />
+        <input type="number" name="new-child-rate" id="new-child-rate" placeholder="&#8377; per session" min="0" step="50" />
+        <button class="btn small" id="add-child">Add student</button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Students</h2>
+    <p class="section-sub">Click a student to see their sessions, totals, and generate their invoice.</p>
+    <div class="student-buttons" id="student-buttons"></div>
+    <div id="student-detail"></div>
+  </section>
+
+  <section>
+    <h2>Log a session</h2>
+    <div class="log-form">
+      <label class="child-field">Student
+        <select id="entry-child"></select>
+      </label>
+      <label class="date-field">Date
+        <input type="date" id="entry-date" />
+      </label>
+      <label class="time-field">Time
+        <input type="time" id="entry-time" />
+      </label>
+      <label class="amt-field">Amount
+        <input type="number" id="entry-amount" min="0" step="50" placeholder="&#8377;" />
+      </label>
+      <label class="note-field">Note
+        <input type="text" id="entry-note" placeholder="optional" />
+      </label>
+      <button class="btn" id="add-entry">Log session</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>All students</h2>
+    <div class="card">
+      <div class="grand-total-line" id="grand-total-line"></div>
+    </div>
+  </section>
+
+  <div class="disclaimer">
+    <p><strong>How this page works.</strong> Data is cached in this browser only, separate from the savings ledger page. "Owed" money logged here isn't automatically added to that page's earnings log &mdash; add it there yourself once a student actually pays.</p>
+    <p><strong>Invoices</strong> list a student's unpaid sessions. Generating one doesn't mark anything as paid on its own &mdash; use "Mark these sessions as paid" inside the invoice once you've actually been paid.</p>
+  </div>
+</div>
+
+<div class="overlay" id="invoice-overlay" hidden>
+  <div id="invoice-panel">
+    <div class="invoice-head">
+      <h2>INVOICE</h2>
+      <div class="invoice-meta">
+        <div id="invoice-number"></div>
+        <div id="invoice-date"></div>
+      </div>
+    </div>
+    <div class="parties">
+      <div>
+        <div class="label">From</div>
+        <div id="invoice-from-name">&mdash;</div>
+      </div>
+      <div>
+        <div class="label">Bill to</div>
+        <div id="invoice-child-name">&mdash;</div>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Date</th><th>Time</th><th>Note</th><th class="num">Amount</th></tr></thead>
+      <tbody id="invoice-rows"></tbody>
+    </table>
+    <table>
+      <tbody>
+        <tr class="total-row"><td colspan="3">Total due</td><td class="num" id="invoice-total"></td></tr>
+      </tbody>
+    </table>
+    <div class="invoice-actions no-print">
+      <button class="btn ghost" id="invoice-close">Close</button>
+      <button class="btn ghost" id="invoice-mark-paid">Mark these sessions as paid</button>
+      <button class="btn" id="invoice-print">Print / Save as PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var LS_KEY = "gb5tuition.v1";
+  var THEME_KEY = "gb5tracker.theme";
+  var RUPEE = "₹";
+
+  var DEFAULT_STATE = {
+    invoiceFrom: "",
+    children: [
+      { id: "rayan", name: "Rayan", rate: 1500 },
+      { id: "adhira", name: "Adhira", rate: 1200 }
+    ],
+    entries: []
+  };
+
+  function cloneDefault(){
+    return {
+      invoiceFrom: DEFAULT_STATE.invoiceFrom,
+      children: DEFAULT_STATE.children.map(function(c){ return Object.assign({}, c); }),
+      entries: []
+    };
+  }
+
+  function loadState(){
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        var saved = JSON.parse(raw);
+        if (saved && typeof saved === "object") {
+          var state = cloneDefault();
+          if (typeof saved.invoiceFrom === "string") state.invoiceFrom = saved.invoiceFrom;
+          if (Array.isArray(saved.children) && saved.children.length) state.children = saved.children;
+          if (Array.isArray(saved.entries)) state.entries = saved.entries;
+          return state;
+        }
+      }
+    } catch (e) { /* corrupt state, fall back to defaults */ }
+    return cloneDefault();
+  }
+
+  var state = loadState();
+  var selectedChildId = state.children.length ? state.children[0].id : null;
+
+  function saveState(){
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+  }
+
+  var $ = function(id){ return document.getElementById(id); };
+  var fmt = function(n){
+    n = Math.round(n || 0);
+    return RUPEE + n.toLocaleString("en-IN");
+  };
+  var fmtDate = function(iso){
+    if (!iso) return "—";
+    var d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  };
+  var fmtTime = function(t){
+    if (!t) return "—";
+    var parts = t.split(":");
+    if (parts.length < 2) return t;
+    var h = Number(parts[0]);
+    var m = parts[1];
+    var suffix = h >= 12 ? "PM" : "AM";
+    var h12 = h % 12 === 0 ? 12 : h % 12;
+    return h12 + ":" + m + " " + suffix;
+  };
+  var todayISO = function(){
+    var d = new Date();
+    var tz = d.getTimezoneOffset() * 60000;
+    return new Date(d - tz).toISOString().slice(0, 10);
+  };
+  var escapeHtml = function(str){
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  };
+  var slugify = function(str){
+    return (str || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || ("s" + Date.now());
+  };
+
+  function childById(id){
+    for (var i = 0; i < state.children.length; i++) {
+      if (state.children[i].id === id) return state.children[i];
+    }
+    return null;
+  }
+
+  function childTotals(childId){
+    var sessions = state.entries.filter(function(e){ return e.childId === childId; });
+    var billed = sessions.reduce(function(s, e){ return s + (Number(e.amount) || 0); }, 0);
+    var paid = sessions.reduce(function(s, e){ return e.paid ? s + (Number(e.amount) || 0) : s; }, 0);
+    return { sessions: sessions, count: sessions.length, billed: billed, paid: paid, owed: billed - paid };
+  }
+
+  function renderChildSelect(){
+    var select = $("entry-child");
+    var prevValue = select.value;
+    select.innerHTML = "";
+    state.children.forEach(function(child){
+      var opt = document.createElement("option");
+      opt.value = child.id;
+      opt.textContent = child.name;
+      select.appendChild(opt);
+    });
+    if (state.children.some(function(c){ return c.id === prevValue; })) {
+      select.value = prevValue;
+    } else if (selectedChildId) {
+      select.value = selectedChildId;
+    }
+  }
+
+  function renderStudentButtons(){
+    var wrap = $("student-buttons");
+    wrap.innerHTML = "";
+    state.children.forEach(function(child){
+      var totals = childTotals(child.id);
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "student-btn" + (child.id === selectedChildId ? " active" : "");
+      btn.setAttribute("data-child", child.id);
+      btn.innerHTML =
+        '<span class="name">' + escapeHtml(child.name) + '</span>' +
+        '<span class="owed' + (totals.owed > 0 ? "" : " zero") + '">' +
+          (totals.owed > 0 ? fmt(totals.owed) + " owed" : "all paid up") +
+        '</span>';
+      wrap.appendChild(btn);
+    });
+  }
+
+  function renderStudentDetail(){
+    var container = $("student-detail");
+    var child = selectedChildId ? childById(selectedChildId) : null;
+    if (!child) {
+      container.innerHTML = '<div class="student-placeholder">Add a student above, then click their name to see details.</div>';
+      return;
+    }
+    var totals = childTotals(child.id);
+    var sorted = totals.sessions.slice().sort(function(a, b){ return (b.date + b.time).localeCompare(a.date + a.time); });
+
+    var rowsHtml = "";
+    if (!sorted.length) {
+      rowsHtml = '<div class="empty">No sessions logged for ' + escapeHtml(child.name) + ' yet.</div>';
+    } else {
+      sorted.forEach(function(entry){
+        rowsHtml +=
+          '<div class="row">' +
+            '<div class="date mono">' + fmtDate(entry.date) + '</div>' +
+            '<div class="time mono">' + fmtTime(entry.time) + '</div>' +
+            '<div>' + (entry.note ? escapeHtml(entry.note) : "&nbsp;") + '</div>' +
+            '<div class="amount mono">' + fmt(entry.amount) + '</div>' +
+            '<div class="paid-pill ' + (entry.paid ? "paid" : "owed") + '">' + (entry.paid ? "Paid" : "Owed") + '</div>' +
+            '<div class="row-actions">' +
+              (entry.paid ? "" : '<button class="icon-btn mark" data-id="' + entry.id + '">Mark paid</button>') +
+              '<button class="icon-btn remove" data-id="' + entry.id + '">Remove</button>' +
+            '</div>' +
+          '</div>';
+      });
+    }
+
+    container.innerHTML =
+      '<div class="student-detail card">' +
+        '<div class="detail-head">' +
+          '<h3 class="serif">' + escapeHtml(child.name) + '</h3>' +
+          '<div class="rate-edit">Rate per session <span>' + RUPEE + '</span><input type="number" class="mono" id="detail-rate" min="0" step="50" value="' + child.rate + '" /></div>' +
+        '</div>' +
+        '<div class="detail-totals">' +
+          '<div><div class="k">Sessions</div><div class="v mono">' + totals.count + '</div></div>' +
+          '<div><div class="k">Billed</div><div class="v mono">' + fmt(totals.billed) + '</div></div>' +
+          '<div><div class="k">Paid</div><div class="v mono">' + fmt(totals.paid) + '</div></div>' +
+          '<div><div class="k">Owed</div><div class="v mono owed">' + fmt(totals.owed) + '</div></div>' +
+        '</div>' +
+        '<div class="ledger">' + rowsHtml + '</div>' +
+        '<div class="detail-actions">' +
+          '<button class="icon-btn remove" id="remove-student">Remove student</button>' +
+          '<button class="btn small" id="detail-invoice-btn">Generate invoice</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function render(){
+    renderChildSelect();
+    renderStudentButtons();
+    renderStudentDetail();
+
+    var grand = { count: 0, billed: 0, paid: 0, owed: 0 };
+    state.children.forEach(function(child){
+      var t = childTotals(child.id);
+      grand.count += t.count;
+      grand.billed += t.billed;
+      grand.paid += t.paid;
+      grand.owed += t.owed;
+    });
+    $("grand-total-line").innerHTML =
+      grand.count + " " + (grand.count === 1 ? "session" : "sessions") + " logged across " +
+      state.children.length + " " + (state.children.length === 1 ? "student" : "students") +
+      " &middot; " + fmt(grand.billed) + " billed &middot; " + fmt(grand.paid) + " paid &middot; <strong>" + fmt(grand.owed) + " owed</strong>";
+  }
+
+  // ---- settings ----
+
+  $("invoice-from").addEventListener("input", function(){
+    state.invoiceFrom = this.value;
+    saveState();
+  });
+
+  $("add-child").addEventListener("click", function(){
+    var nameEl = $("new-child-name");
+    var rateEl = $("new-child-rate");
+    var name = (nameEl.value || "").trim();
+    if (!name) { nameEl.focus(); return; }
+    var rate = Number(rateEl.value) || 0;
+    var id = slugify(name);
+    if (childById(id)) id = id + "-" + Date.now().toString(36).slice(-4);
+    state.children.push({ id: id, name: name, rate: rate });
+    selectedChildId = id;
+    nameEl.value = "";
+    rateEl.value = "";
+    saveState();
+    render();
+  });
+
+  // ---- student selection & detail ----
+
+  $("student-buttons").addEventListener("click", function(e){
+    var btn = e.target.closest ? e.target.closest(".student-btn") : null;
+    if (!btn) return;
+    var id = btn.getAttribute("data-child");
+    selectedChildId = selectedChildId === id ? null : id;
+    render();
+  });
+
+  $("student-detail").addEventListener("input", function(e){
+    if (e.target.id !== "detail-rate") return;
+    var child = childById(selectedChildId);
+    if (!child) return;
+    var v = Number(e.target.value);
+    child.rate = isNaN(v) ? 0 : v;
+    saveState();
+    renderStudentButtons();
+  });
+
+  $("student-detail").addEventListener("click", function(e){
+    var markBtn = e.target.closest ? e.target.closest(".icon-btn.mark") : null;
+    var removeBtn = e.target.closest ? e.target.closest(".icon-btn.remove:not(#remove-student)") : null;
+    var removeStudentBtn = e.target.closest ? e.target.closest("#remove-student") : null;
+    var invoiceBtn = e.target.closest ? e.target.closest("#detail-invoice-btn") : null;
+
+    if (markBtn) {
+      var id = markBtn.getAttribute("data-id");
+      state.entries.forEach(function(entry){ if (entry.id === id) entry.paid = true; });
+      saveState();
+      render();
+      return;
+    }
+    if (removeBtn) {
+      var rid = removeBtn.getAttribute("data-id");
+      state.entries = state.entries.filter(function(entry){ return entry.id !== rid; });
+      saveState();
+      render();
+      return;
+    }
+    if (removeStudentBtn) {
+      state.children = state.children.filter(function(c){ return c.id !== selectedChildId; });
+      selectedChildId = null;
+      saveState();
+      render();
+      return;
+    }
+    if (invoiceBtn) {
+      openInvoice(selectedChildId);
+    }
+  });
+
+  // ---- session log ----
+
+  $("entry-child").addEventListener("change", function(){
+    var child = childById(this.value);
+    if (child) $("entry-amount").value = child.rate;
+  });
+
+  $("add-entry").addEventListener("click", function(){
+    var childSel = $("entry-child");
+    var dateEl = $("entry-date");
+    var timeEl = $("entry-time");
+    var amountEl = $("entry-amount");
+    var noteEl = $("entry-note");
+
+    var childId = childSel.value;
+    if (!childId) { childSel.focus(); return; }
+    var amount = Number(amountEl.value);
+    if (!amount || amount <= 0) { amountEl.focus(); return; }
+
+    state.entries.push({
+      id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      childId: childId,
+      date: dateEl.value || todayISO(),
+      time: timeEl.value || "",
+      amount: amount,
+      note: (noteEl.value || "").slice(0, 80),
+      paid: false
+    });
+    noteEl.value = "";
+    saveState();
+    render();
+  });
+
+  // ---- invoice ----
+
+  var invoiceChildId = null;
+
+  function openInvoice(childId){
+    var child = childById(childId);
+    if (!child) return;
+    invoiceChildId = childId;
+
+    var unpaid = state.entries.filter(function(e){ return e.childId === childId && !e.paid; })
+      .sort(function(a, b){ return (a.date + a.time).localeCompare(b.date + b.time); });
+
+    $("invoice-number").textContent = "INV-" + child.id.toUpperCase().slice(0, 4) + "-" + todayISO().replace(/-/g, "");
+    $("invoice-date").textContent = "Issued " + fmtDate(todayISO());
+    $("invoice-from-name").textContent = state.invoiceFrom || "—";
+    $("invoice-child-name").textContent = child.name;
+
+    var rows = $("invoice-rows");
+    rows.innerHTML = "";
+    var total = 0;
+    if (!unpaid.length) {
+      rows.innerHTML = '<tr><td colspan="4" class="invoice-empty">No unpaid sessions for ' + escapeHtml(child.name) + '.</td></tr>';
+    } else {
+      unpaid.forEach(function(entry){
+        total += Number(entry.amount) || 0;
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + fmtDate(entry.date) + "</td>" +
+          "<td>" + fmtTime(entry.time) + "</td>" +
+          "<td>" + (entry.note ? escapeHtml(entry.note) : "&nbsp;") + "</td>" +
+          '<td class="num">' + fmt(entry.amount) + "</td>";
+        rows.appendChild(tr);
+      });
+    }
+    $("invoice-total").textContent = fmt(total);
+    $("invoice-mark-paid").disabled = !unpaid.length;
+
+    $("invoice-overlay").hidden = false;
+  }
+
+  $("invoice-close").addEventListener("click", function(){
+    $("invoice-overlay").hidden = true;
+    invoiceChildId = null;
+  });
+
+  $("invoice-overlay").addEventListener("click", function(e){
+    if (e.target === this) { this.hidden = true; invoiceChildId = null; }
+  });
+
+  $("invoice-print").addEventListener("click", function(){
+    window.print();
+  });
+
+  $("invoice-mark-paid").addEventListener("click", function(){
+    if (!invoiceChildId) return;
+    state.entries.forEach(function(entry){
+      if (entry.childId === invoiceChildId && !entry.paid) entry.paid = true;
+    });
+    saveState();
+    render();
+    $("invoice-overlay").hidden = true;
+    invoiceChildId = null;
+  });
+
+  // ---- theme (shared with savings ledger page) ----
+
+  function applyTheme(theme){
+    document.documentElement.setAttribute("data-theme", theme);
+    $("theme-toggle").setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+  }
+  function loadTheme(){
+    try {
+      var saved = localStorage.getItem(THEME_KEY);
+      if (saved === "dark" || saved === "light") return saved;
+    } catch (e) { /* storage unavailable */ }
+    return "light";
+  }
+  var currentTheme = loadTheme();
+  applyTheme(currentTheme);
+
+  $("theme-toggle").addEventListener("click", function(){
+    currentTheme = currentTheme === "dark" ? "light" : "dark";
+    applyTheme(currentTheme);
+    try { localStorage.setItem(THEME_KEY, currentTheme); } catch (e) { /* storage unavailable */ }
+  });
+
+  // ---- init ----
+
+  $("invoice-from").value = state.invoiceFrom;
+  $("entry-date").value = todayISO();
+  render();
+  var initialChild = $("entry-child");
+  if (initialChild.value) {
+    var c = childById(initialChild.value);
+    if (c) $("entry-amount").value = c.rate;
+  }
+})();
+</script>

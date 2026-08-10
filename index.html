@@ -106,9 +106,29 @@
 
   .theme-toggle-wrap{
     display:flex;
-    justify-content:flex-end;
+    justify-content:space-between;
+    align-items:center;
     margin-bottom:1.6rem;
   }
+  .page-nav{
+    display:flex;
+    gap:.25rem;
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:99px;
+    padding:.25rem;
+    width:fit-content;
+  }
+  .page-nav a{
+    padding:.4rem 1rem;
+    border-radius:99px;
+    font-size:.82rem;
+    font-weight:600;
+    text-decoration:none;
+    color:var(--slate);
+  }
+  .page-nav a.active{ background:var(--ink); color:var(--paper); }
+  .page-nav a:hover:not(.active){ color:var(--gold); }
   .theme-toggle{
     position:relative;
     width:56px;
@@ -541,6 +561,10 @@
   </header>
 
   <div class="theme-toggle-wrap">
+    <nav class="page-nav">
+      <a href="index.html" class="active">Savings</a>
+      <a href="tuition.html">Tuition</a>
+    </nav>
     <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch between light and dark background" aria-pressed="false">
       <span class="icon sun">&#9728;</span>
       <span class="icon moon">&#9790;</span>
