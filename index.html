@@ -6,9 +6,11 @@
     --paper:#F6F1E4;
     --card:#FFFDF6;
     --rule:#DCD3B8;
+    --track-bg:#DCD3B8;
     --slate:#5B6856;
     --gold:#A97A22;
     --gold-soft:#A97A2226;
+    --gold-fill:#A97A2280;
     --moss:#3D6B49;
     --moss-soft:#3D6B4940;
     --rust:#A2432B;
@@ -21,9 +23,11 @@
       --paper:#10160F;
       --card:#182016;
       --rule:#33402E;
+      --track-bg:#2E2A20;
       --slate:#97A08C;
       --gold:#D2A23F;
       --gold-soft:#D2A23F26;
+      --gold-fill:#D2A23F80;
       --moss:#5C9A6C;
       --moss-soft:#5C9A6C40;
       --rust:#C2654A;
@@ -32,14 +36,14 @@
     }
   }
   :root[data-theme="dark"]{
-    --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E;
-    --slate:#97A08C; --gold:#D2A23F; --gold-soft:#D2A23F26; --moss:#5C9A6C; --moss-soft:#5C9A6C40; --rust:#C2654A;
+    --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E; --track-bg:#2E2A20;
+    --slate:#97A08C; --gold:#D2A23F; --gold-soft:#D2A23F26; --gold-fill:#D2A23F80; --moss:#5C9A6C; --moss-soft:#5C9A6C40; --rust:#C2654A;
     --grid-line:#EAE4D00D;
     --shadow: 0 1px 0 rgba(0,0,0,.3);
   }
   :root[data-theme="light"]{
-    --ink:#1C2B22; --paper:#F6F1E4; --card:#FFFDF6; --rule:#DCD3B8;
-    --slate:#5B6856; --gold:#A97A22; --gold-soft:#A97A2226; --moss:#3D6B49; --moss-soft:#3D6B4940; --rust:#A2432B;
+    --ink:#1C2B22; --paper:#F6F1E4; --card:#FFFDF6; --rule:#DCD3B8; --track-bg:#DCD3B8;
+    --slate:#5B6856; --gold:#A97A22; --gold-soft:#A97A2226; --gold-fill:#A97A2280; --moss:#3D6B49; --moss-soft:#3D6B4940; --rust:#A2432B;
     --grid-line:#1C2B2209;
     --shadow: 0 1px 0 rgba(28,43,34,.06);
   }
@@ -172,7 +176,7 @@
     position:relative;
     height:10px;
     border-radius:99px;
-    background:var(--rule);
+    background:var(--track-bg);
     margin-bottom:.4rem;
     overflow:hidden;
   }
@@ -185,7 +189,7 @@
     width:0%;
   }
   .track .fill-earned{
-    background:var(--moss-soft);
+    background:var(--gold-fill);
     z-index:1;
   }
   .track .fill{
@@ -210,7 +214,7 @@
     margin-bottom:1rem;
   }
   .track-caption .dot{ color:var(--gold); }
-  .track-caption .dot.soft{ color:var(--moss); }
+  .track-caption .dot.moss{ color:var(--moss); }
   .stat-row{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -525,7 +529,7 @@
         <div class="fill" id="progress-fill"></div>
         <div class="plan-marker" id="plan-marker" title="Original tuition-plan estimate"></div>
       </div>
-      <div class="track-caption"><span class="dot">&#9679;</span> gold mark = original tuition-plan estimate (&#8377;1,13,600) &middot; <span class="dot soft">&#9679;</span> solid = received, light = earned but unpaid</div>
+      <div class="track-caption">Amber fill = earned but unpaid &middot; <span class="dot moss">&#9679;</span> moss fill = received &middot; <span class="dot">&#9679;</span> gold tick = original tuition-plan estimate (&#8377;1,13,600)</div>
       <div class="stat-row">
         <div class="stat">
           <div class="v mono" id="remaining-amount">&#8377;0</div>
