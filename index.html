@@ -3,13 +3,16 @@
 <style>
   :root{
     --ink:#1C2B22;
-    --paper:#E9E4D2;
-    --card:#FBF8EF;
-    --rule:#C7BB98;
+    --paper:#F6F1E4;
+    --card:#FFFDF6;
+    --rule:#DCD3B8;
     --slate:#5B6856;
     --gold:#A97A22;
+    --gold-soft:#A97A2226;
     --moss:#3D6B49;
+    --moss-soft:#3D6B4940;
     --rust:#A2432B;
+    --grid-line:#1C2B2209;
     --shadow: 0 1px 0 rgba(28,43,34,.06);
   }
   @media (prefers-color-scheme: dark){
@@ -20,26 +23,35 @@
       --rule:#33402E;
       --slate:#97A08C;
       --gold:#D2A23F;
+      --gold-soft:#D2A23F26;
       --moss:#5C9A6C;
+      --moss-soft:#5C9A6C40;
       --rust:#C2654A;
+      --grid-line:#EAE4D00D;
       --shadow: 0 1px 0 rgba(0,0,0,.3);
     }
   }
   :root[data-theme="dark"]{
     --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E;
-    --slate:#97A08C; --gold:#D2A23F; --moss:#5C9A6C; --rust:#C2654A;
+    --slate:#97A08C; --gold:#D2A23F; --gold-soft:#D2A23F26; --moss:#5C9A6C; --moss-soft:#5C9A6C40; --rust:#C2654A;
+    --grid-line:#EAE4D00D;
     --shadow: 0 1px 0 rgba(0,0,0,.3);
   }
   :root[data-theme="light"]{
-    --ink:#1C2B22; --paper:#E9E4D2; --card:#FBF8EF; --rule:#C7BB98;
-    --slate:#5B6856; --gold:#A97A22; --moss:#3D6B49; --rust:#A2432B;
+    --ink:#1C2B22; --paper:#F6F1E4; --card:#FFFDF6; --rule:#DCD3B8;
+    --slate:#5B6856; --gold:#A97A22; --gold-soft:#A97A2226; --moss:#3D6B49; --moss-soft:#3D6B4940; --rust:#A2432B;
+    --grid-line:#1C2B2209;
     --shadow: 0 1px 0 rgba(28,43,34,.06);
   }
 
   *{box-sizing:border-box;}
   body{
     margin:0;
-    background:var(--paper);
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:28px 28px;
     color:var(--ink);
     font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
     line-height:1.5;
@@ -106,33 +118,6 @@
     margin-top:.2rem;
   }
 
-  .sync-bar{
-    display:flex;
-    align-items:center;
-    gap:.7rem;
-    flex-wrap:wrap;
-    background:var(--card);
-    border:1px solid var(--rule);
-    border-radius:7px;
-    padding:.6rem .8rem;
-    margin-bottom:2rem;
-    font-size:.8rem;
-    color:var(--slate);
-  }
-  .sync-bar .copy-btn{
-    background:var(--ink);
-    color:var(--paper);
-    border:none;
-    border-radius:7px;
-    padding:.35rem .7rem;
-    font-weight:600;
-    font-size:.78rem;
-    cursor:pointer;
-    flex-shrink:0;
-  }
-  .sync-bar .copy-btn:hover{ opacity:.88; }
-  .sync-bar .copy-status{ color:var(--moss); font-weight:600; }
-
   section{ margin-bottom:2.25rem; }
   h2{
     font-size:1rem;
@@ -177,18 +162,35 @@
     font-weight:400;
     color:var(--slate);
   }
+  .earned-note{
+    font-size:.8rem;
+    color:var(--gold);
+    font-weight:600;
+    margin:-.5rem 0 1rem;
+  }
   .track{
     position:relative;
     height:10px;
     border-radius:99px;
     background:var(--rule);
     margin-bottom:.4rem;
+    overflow:hidden;
   }
-  .track .fill{
+  .track .fill, .track .fill-earned{
+    position:absolute;
+    left:0;
+    top:0;
     height:100%;
-    background:var(--moss);
     border-radius:99px;
     width:0%;
+  }
+  .track .fill-earned{
+    background:var(--moss-soft);
+    z-index:1;
+  }
+  .track .fill{
+    background:var(--moss);
+    z-index:2;
   }
   .track .plan-marker{
     position:absolute;
@@ -197,9 +199,10 @@
     height:16px;
     background:var(--gold);
     left:0%;
+    z-index:3;
   }
   @media (prefers-reduced-motion: no-preference){
-    .track .fill{ transition:width .6s cubic-bezier(.4,0,.2,1); }
+    .track .fill, .track .fill-earned{ transition:width .6s cubic-bezier(.4,0,.2,1); }
   }
   .track-caption{
     font-size:.72rem;
@@ -207,6 +210,7 @@
     margin-bottom:1rem;
   }
   .track-caption .dot{ color:var(--gold); }
+  .track-caption .dot.soft{ color:var(--moss); }
   .stat-row{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -345,8 +349,8 @@
     font-weight:700;
     white-space:nowrap;
   }
-  .status-pill.earned{ background:color-mix(in srgb, var(--gold) 20%, transparent); color:var(--gold); }
-  .status-pill.received{ background:color-mix(in srgb, var(--moss) 20%, transparent); color:var(--moss); }
+  .status-pill.earned{ background:var(--gold-soft); color:var(--gold); }
+  .status-pill.received{ background:var(--moss-soft); color:var(--moss); }
   .row-actions{ display:flex; gap:.4rem; white-space:nowrap; }
   .ledger .empty{
     padding:1rem 0;
@@ -507,12 +511,6 @@
     </div>
   </header>
 
-  <div class="sync-bar">
-    <span>This page's link carries your data. After adding or changing anything, copy the link and open it on your other device to keep going.</span>
-    <button class="copy-btn" id="copy-link-btn" type="button">Copy link</button>
-    <span class="copy-status" id="copy-status" hidden>Copied</span>
-  </div>
-
   <section>
     <div class="goal-card">
       <div class="goal-figures">
@@ -521,11 +519,13 @@
           <span class="of">of <span id="target-display">&#8377;0</span></span>
         </div>
       </div>
+      <div class="earned-note" id="earned-note" hidden>+ <span id="pending-earned">&#8377;0</span> earned, not yet received</div>
       <div class="track">
+        <div class="fill-earned" id="progress-fill-earned"></div>
         <div class="fill" id="progress-fill"></div>
         <div class="plan-marker" id="plan-marker" title="Original tuition-plan estimate"></div>
       </div>
-      <div class="track-caption"><span class="dot">&#9679;</span> gold mark = where your original tuition-plan estimate (&#8377;1,13,600) would land on this bar</div>
+      <div class="track-caption"><span class="dot">&#9679;</span> gold mark = original tuition-plan estimate (&#8377;1,13,600) &middot; <span class="dot soft">&#9679;</span> solid = received, light = earned but unpaid</div>
       <div class="stat-row">
         <div class="stat">
           <div class="v mono" id="remaining-amount">&#8377;0</div>
@@ -641,7 +641,7 @@
   </section>
 
   <div class="disclaimer">
-    <p><strong>How this page works.</strong> There's no account or server &mdash; your data is encoded right into this page's URL, and also cached in this browser for convenience. The URL is the portable copy: after any change, use "Copy link" above and open that exact link on your phone, laptop, wherever &mdash; it'll load with everything up to date. An old, un-updated link will show old data.</p>
+    <p><strong>How this page works.</strong> There's no account or server &mdash; your data is cached in this browser, and also encoded into this page's own address-bar URL as you go. To pick up on another device, copy the address bar's URL after making changes and open it there.</p>
     <p><strong>Prices</strong> here are a manual snapshot &mdash; edit either price field yourself whenever you've checked the live listing on Amazon or Flipkart.</p>
   </div>
 </div>
@@ -791,6 +791,7 @@
     var target = Number(state.target) || 0;
     var remaining = Math.max(0, target - saved);
     var pct = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
+    var earnedPct = target > 0 ? Math.min(100, (earned / target) * 100) : 0;
     var planPct = target > 0 ? Math.min(100, (REFERENCE_PLAN_TOTAL / target) * 100) : 0;
 
     $("saved-total").textContent = fmt(saved);
@@ -798,7 +799,16 @@
     $("remaining-amount").textContent = fmt(remaining);
     $("outstanding-amount").textContent = fmt(outstanding);
     $("progress-fill").style.width = pct + "%";
+    $("progress-fill-earned").style.width = earnedPct + "%";
     $("plan-marker").style.left = planPct + "%";
+
+    var earnedNoteEl = $("earned-note");
+    if (outstanding > 0) {
+      earnedNoteEl.hidden = false;
+      $("pending-earned").textContent = fmt(outstanding);
+    } else {
+      earnedNoteEl.hidden = true;
+    }
 
     var today = new Date(todayISO() + "T00:00:00");
     var buyBy = new Date(state.targetDate + "T00:00:00");
@@ -960,36 +970,6 @@
       render();
     });
   });
-
-  $("copy-link-btn").addEventListener("click", function(){
-    persistState();
-    var url = window.location.href;
-    var statusEl = $("copy-status");
-    function showCopied(){
-      statusEl.hidden = false;
-      setTimeout(function(){ statusEl.hidden = true; }, 2000);
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(url).then(showCopied, function(){ fallbackCopy(url, showCopied); });
-    } else {
-      fallbackCopy(url, showCopied);
-    }
-  });
-
-  function fallbackCopy(text, onDone){
-    try {
-      var ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      onDone();
-    } catch (e) { /* copy unavailable, user can select the URL bar manually */ }
-  }
 
   $("entry-date").value = todayISO();
 
