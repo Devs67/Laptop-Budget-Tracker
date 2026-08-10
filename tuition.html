@@ -273,7 +273,7 @@
   .ledger{ border-top:1px solid var(--ink); }
   .ledger .row{
     display:grid;
-    grid-template-columns:5.5rem 4.5rem 1fr auto auto auto;
+    grid-template-columns:5.5rem 4.5rem 3.6rem 1fr auto auto auto;
     gap:.6rem;
     align-items:center;
     padding:.55rem 0;
@@ -285,6 +285,7 @@
   }
   .ledger .row .date{ color:var(--slate); }
   .ledger .row .time{ color:var(--slate); }
+  .ledger .row .duration{ color:var(--slate); }
   .ledger .row .amount{ font-weight:600; text-align:right; }
   .paid-pill{
     font-size:.62rem;
@@ -325,6 +326,18 @@
   .log-form .time-field{ width:8rem; }
   .log-form .amt-field{ width:7.5rem; }
   .log-form .note-field{ flex:1; min-width:8rem; }
+  .duration-field{
+    display:flex;
+    flex-direction:column;
+    gap:.3rem;
+    font-size:.72rem;
+    color:var(--slate);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .duration-inputs{ display:flex; align-items:center; gap:.3rem; }
+  .duration-inputs input{ width:3.6rem; }
+  .duration-inputs span{ font-size:.8rem; color:var(--slate); text-transform:none; letter-spacing:0; }
 
   .grand-total-line{ font-size:.92rem; }
   .grand-total-line strong{ color:var(--gold); }
@@ -434,7 +447,7 @@
       </label>
       <div class="add-child-row">
         <input type="text" name="new-child-name" id="new-child-name" placeholder="Student name" />
-        <input type="number" name="new-child-rate" id="new-child-rate" placeholder="&#8377; per session" min="0" step="50" />
+        <input type="number" name="new-child-rate" id="new-child-rate" placeholder="&#8377; per hour" min="0" step="50" />
         <button class="btn small" id="add-child">Add student</button>
       </div>
     </div>
@@ -459,6 +472,12 @@
       <label class="time-field">Time
         <input type="time" id="entry-time" />
       </label>
+      <div class="duration-field">Duration
+        <div class="duration-inputs">
+          <input type="number" id="entry-hours" min="0" step="1" placeholder="0" /><span>h</span>
+          <input type="number" id="entry-minutes" min="0" max="59" step="5" placeholder="0" /><span>m</span>
+        </div>
+      </div>
       <label class="amt-field">Amount
         <input type="number" id="entry-amount" min="0" step="50" placeholder="&#8377;" />
       </label>
@@ -502,12 +521,12 @@
       </div>
     </div>
     <table>
-      <thead><tr><th>Date</th><th>Time</th><th>Note</th><th class="num">Amount</th></tr></thead>
+      <thead><tr><th>Date</th><th>Time</th><th>Duration</th><th>Note</th><th class="num">Amount</th></tr></thead>
       <tbody id="invoice-rows"></tbody>
     </table>
     <table>
       <tbody>
-        <tr class="total-row"><td colspan="3">Total due</td><td class="num" id="invoice-total"></td></tr>
+        <tr class="total-row"><td colspan="4">Total due</td><td class="num" id="invoice-total"></td></tr>
       </tbody>
     </table>
     <div class="invoice-actions no-print">
@@ -593,6 +612,15 @@
     var tz = d.getTimezoneOffset() * 60000;
     return new Date(d - tz).toISOString().slice(0, 10);
   };
+  var fmtDuration = function(mins){
+    mins = Number(mins) || 0;
+    if (!mins) return "—";
+    var h = Math.floor(mins / 60);
+    var m = mins % 60;
+    if (h && m) return h + "h " + m + "m";
+    if (h) return h + "h";
+    return m + "m";
+  };
   var escapeHtml = function(str){
     var div = document.createElement("div");
     div.textContent = str;
@@ -670,6 +698,7 @@
           '<div class="row">' +
             '<div class="date mono">' + fmtDate(entry.date) + '</div>' +
             '<div class="time mono">' + fmtTime(entry.time) + '</div>' +
+            '<div class="duration mono">' + fmtDuration(entry.durationMinutes) + '</div>' +
             '<div>' + (entry.note ? escapeHtml(entry.note) : "&nbsp;") + '</div>' +
             '<div class="amount mono">' + fmt(entry.amount) + '</div>' +
             '<div class="paid-pill ' + (entry.paid ? "paid" : "owed") + '">' + (entry.paid ? "Paid" : "Owed") + '</div>' +
@@ -685,7 +714,7 @@
       '<div class="student-detail card">' +
         '<div class="detail-head">' +
           '<h3 class="serif">' + escapeHtml(child.name) + '</h3>' +
-          '<div class="rate-edit">Rate per session <span>' + RUPEE + '</span><input type="number" class="mono" id="detail-rate" min="0" step="50" value="' + child.rate + '" /></div>' +
+          '<div class="rate-edit">Rate per hour <span>' + RUPEE + '</span><input type="number" class="mono" id="detail-rate" min="0" step="50" value="' + child.rate + '" /></div>' +
         '</div>' +
         '<div class="detail-totals">' +
           '<div><div class="k">Sessions</div><div class="v mono">' + totals.count + '</div></div>' +
@@ -797,15 +826,27 @@
 
   // ---- session log ----
 
-  $("entry-child").addEventListener("change", function(){
-    var child = childById(this.value);
-    if (child) $("entry-amount").value = child.rate;
-  });
+  function computeAmount(){
+    var child = childById($("entry-child").value);
+    if (!child) return;
+    var h = Number($("entry-hours").value) || 0;
+    var m = Number($("entry-minutes").value) || 0;
+    var totalHours = h + (m / 60);
+    if (totalHours > 0) {
+      $("entry-amount").value = Math.round(totalHours * (child.rate || 0));
+    }
+  }
+
+  $("entry-child").addEventListener("change", computeAmount);
+  $("entry-hours").addEventListener("input", computeAmount);
+  $("entry-minutes").addEventListener("input", computeAmount);
 
   $("add-entry").addEventListener("click", function(){
     var childSel = $("entry-child");
     var dateEl = $("entry-date");
     var timeEl = $("entry-time");
+    var hoursEl = $("entry-hours");
+    var minutesEl = $("entry-minutes");
     var amountEl = $("entry-amount");
     var noteEl = $("entry-note");
 
@@ -814,15 +855,21 @@
     var amount = Number(amountEl.value);
     if (!amount || amount <= 0) { amountEl.focus(); return; }
 
+    var hours = Math.max(0, Number(hoursEl.value) || 0);
+    var minutes = Math.max(0, Math.min(59, Number(minutesEl.value) || 0));
+
     state.entries.push({
       id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
       childId: childId,
       date: dateEl.value || todayISO(),
       time: timeEl.value || "",
+      durationMinutes: hours * 60 + minutes,
       amount: amount,
       note: (noteEl.value || "").slice(0, 80),
       paid: false
     });
+    hoursEl.value = "";
+    minutesEl.value = "";
     noteEl.value = "";
     saveState();
     render();
@@ -849,7 +896,7 @@
     rows.innerHTML = "";
     var total = 0;
     if (!unpaid.length) {
-      rows.innerHTML = '<tr><td colspan="4" class="invoice-empty">No unpaid sessions for ' + escapeHtml(child.name) + '.</td></tr>';
+      rows.innerHTML = '<tr><td colspan="5" class="invoice-empty">No unpaid sessions for ' + escapeHtml(child.name) + '.</td></tr>';
     } else {
       unpaid.forEach(function(entry){
         total += Number(entry.amount) || 0;
@@ -857,6 +904,7 @@
         tr.innerHTML =
           "<td>" + fmtDate(entry.date) + "</td>" +
           "<td>" + fmtTime(entry.time) + "</td>" +
+          "<td>" + fmtDuration(entry.durationMinutes) + "</td>" +
           "<td>" + (entry.note ? escapeHtml(entry.note) : "&nbsp;") + "</td>" +
           '<td class="num">' + fmt(entry.amount) + "</td>";
         rows.appendChild(tr);
@@ -919,10 +967,6 @@
   $("invoice-from").value = state.invoiceFrom;
   $("entry-date").value = todayISO();
   render();
-  var initialChild = $("entry-child");
-  if (initialChild.value) {
-    var c = childById(initialChild.value);
-    if (c) $("entry-amount").value = c.rate;
-  }
+  computeAmount();
 })();
 </script>
