@@ -17,24 +17,6 @@
     --grid-line:#1C2B2209;
     --shadow: 0 1px 0 rgba(28,43,34,.06);
   }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --ink:#EAE4D0;
-      --paper:#10160F;
-      --card:#182016;
-      --rule:#33402E;
-      --track-bg:#2E2A20;
-      --slate:#97A08C;
-      --gold:#D2A23F;
-      --gold-soft:#D2A23F26;
-      --gold-fill:#D2A23F80;
-      --moss:#5C9A6C;
-      --moss-soft:#5C9A6C40;
-      --rust:#C2654A;
-      --grid-line:#EAE4D00D;
-      --shadow: 0 1px 0 rgba(0,0,0,.3);
-    }
-  }
   :root[data-theme="dark"]{
     --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E; --track-bg:#2E2A20;
     --slate:#97A08C; --gold:#D2A23F; --gold-soft:#D2A23F26; --gold-fill:#D2A23F80; --moss:#5C9A6C; --moss-soft:#5C9A6C40; --rust:#C2654A;
@@ -120,6 +102,49 @@
     letter-spacing:.06em;
     text-transform:uppercase;
     margin-top:.2rem;
+  }
+
+  .theme-toggle-wrap{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:1.6rem;
+  }
+  .theme-toggle{
+    position:relative;
+    width:56px;
+    height:28px;
+    border-radius:99px;
+    border:1px solid var(--rule);
+    background:var(--card);
+    cursor:pointer;
+    padding:0;
+  }
+  .theme-toggle .icon{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:.75rem;
+    line-height:1;
+    color:var(--slate);
+    pointer-events:none;
+  }
+  .theme-toggle .icon.sun{ left:6px; }
+  .theme-toggle .icon.moon{ right:6px; }
+  .theme-toggle .knob{
+    position:absolute;
+    top:2px;
+    left:2px;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:var(--ink);
+  }
+  :root[data-theme="dark"] .theme-toggle .knob{
+    left:30px;
+    background:var(--gold);
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .theme-toggle .knob{ transition:left .25s ease, background .25s ease; }
   }
 
   section{ margin-bottom:2.25rem; }
@@ -514,6 +539,14 @@
       <div class="lbl">days to 20 Sep</div>
     </div>
   </header>
+
+  <div class="theme-toggle-wrap">
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch between light and dark background" aria-pressed="false">
+      <span class="icon sun">&#9728;</span>
+      <span class="icon moon">&#9790;</span>
+      <span class="knob"></span>
+    </button>
+  </div>
 
   <section>
     <div class="goal-card">
@@ -973,6 +1006,27 @@
       persistState();
       render();
     });
+  });
+
+  var THEME_KEY = "gb5tracker.theme";
+  function applyTheme(theme){
+    document.documentElement.setAttribute("data-theme", theme);
+    $("theme-toggle").setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+  }
+  function loadTheme(){
+    try {
+      var saved = localStorage.getItem(THEME_KEY);
+      if (saved === "dark" || saved === "light") return saved;
+    } catch (e) { /* storage unavailable */ }
+    return "light";
+  }
+  var currentTheme = loadTheme();
+  applyTheme(currentTheme);
+
+  $("theme-toggle").addEventListener("click", function(){
+    currentTheme = currentTheme === "dark" ? "light" : "dark";
+    applyTheme(currentTheme);
+    try { localStorage.setItem(THEME_KEY, currentTheme); } catch (e) { /* storage unavailable */ }
   });
 
   $("entry-date").value = todayISO();
