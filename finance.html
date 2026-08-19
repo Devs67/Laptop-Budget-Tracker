@@ -1,0 +1,731 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Personal Finances</title>
+<style>
+  :root{
+    --ink:#1C2B22;
+    --paper:#F6F1E4;
+    --card:#FFFDF6;
+    --rule:#DCD3B8;
+    --track-bg:#DCD3B8;
+    --slate:#5B6856;
+    --gold:#A97A22;
+    --gold-soft:#A97A2226;
+    --gold-fill:#A97A2280;
+    --moss:#3D6B49;
+    --moss-soft:#3D6B4940;
+    --rust:#A2432B;
+    --rust-soft:#A2432B26;
+    --grid-line:#1C2B2209;
+    --shadow: 0 1px 0 rgba(28,43,34,.06);
+  }
+  :root[data-theme="dark"]{
+    --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E; --track-bg:#2E2A20;
+    --slate:#97A08C; --gold:#D2A23F; --gold-soft:#D2A23F26; --gold-fill:#D2A23F80; --moss:#5C9A6C; --moss-soft:#5C9A6C40; --rust:#C2654A; --rust-soft:#C2654A26;
+    --grid-line:#EAE4D00D;
+    --shadow: 0 1px 0 rgba(0,0,0,.3);
+  }
+  :root[data-theme="light"]{
+    --ink:#1C2B22; --paper:#F6F1E4; --card:#FFFDF6; --rule:#DCD3B8; --track-bg:#DCD3B8;
+    --slate:#5B6856; --gold:#A97A22; --gold-soft:#A97A2226; --gold-fill:#A97A2280; --moss:#3D6B49; --moss-soft:#3D6B4940; --rust:#A2432B; --rust-soft:#A2432B26;
+    --grid-line:#1C2B2209;
+    --shadow: 0 1px 0 rgba(28,43,34,.06);
+  }
+
+  *{box-sizing:border-box;}
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:28px 28px;
+    color:var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sheet{
+    max-width:640px;
+    margin:0 auto;
+    padding:1.5rem 1rem 4rem;
+  }
+  @media (min-width:600px){ .sheet{ padding:2.5rem 1.5rem 4rem; } }
+  .serif{ font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
+  .mono{
+    font-family: "SF Mono", "Cascadia Mono", Consolas, "Roboto Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .eyebrow{
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--slate);
+    font-weight:600;
+  }
+
+  header.top{
+    padding-bottom:1.2rem;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:1rem;
+  }
+  header.top h1{
+    margin:.2rem 0 .3rem;
+    font-size:1.6rem;
+    font-weight:600;
+    text-wrap:balance;
+  }
+  @media (min-width:600px){ header.top h1{ font-size:1.9rem; } }
+  .spec-line{ color:var(--slate); font-size:.88rem; }
+
+  .theme-toggle-wrap{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:.6rem;
+    flex-wrap:wrap;
+    margin-bottom:1.4rem;
+  }
+  .page-nav{
+    display:flex;
+    gap:.2rem;
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:99px;
+    padding:.22rem;
+    width:fit-content;
+  }
+  .page-nav a{
+    padding:.42rem .8rem;
+    border-radius:99px;
+    font-size:.78rem;
+    font-weight:600;
+    text-decoration:none;
+    color:var(--slate);
+    white-space:nowrap;
+  }
+  .page-nav a.active{ background:var(--ink); color:var(--paper); }
+  .page-nav a:hover:not(.active){ color:var(--gold); }
+  .theme-toggle{
+    position:relative;
+    width:52px;
+    height:28px;
+    flex-shrink:0;
+    border-radius:99px;
+    border:1px solid var(--rule);
+    background:var(--card);
+    cursor:pointer;
+    padding:0;
+  }
+  .theme-toggle .icon{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:.75rem;
+    line-height:1;
+    color:var(--slate);
+    pointer-events:none;
+  }
+  .theme-toggle .icon.sun{ left:6px; }
+  .theme-toggle .icon.moon{ right:6px; }
+  .theme-toggle .knob{
+    position:absolute;
+    top:2px;
+    left:2px;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:var(--ink);
+  }
+  :root[data-theme="dark"] .theme-toggle .knob{ left:26px; background:var(--gold); }
+  @media (prefers-reduced-motion: no-preference){
+    .theme-toggle .knob{ transition:left .25s ease, background .25s ease; }
+  }
+
+  section{ margin-bottom:1.6rem; }
+  h2{
+    font-size:.95rem;
+    font-weight:700;
+    margin:0 0 .3rem;
+  }
+  .section-sub{ font-size:.8rem; color:var(--slate); margin:0 0 .8rem; }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:14px;
+    padding:1.1rem 1.1rem;
+    box-shadow:var(--shadow);
+  }
+
+  /* ---- summary ---- */
+  .summary-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:.6rem;
+  }
+  .summary-grid .stat{
+    text-align:center;
+    padding:.3rem 0;
+  }
+  .summary-grid .stat .v{
+    font-size:1.15rem;
+    font-weight:700;
+    word-break:break-word;
+  }
+  @media (min-width:400px){ .summary-grid .stat .v{ font-size:1.35rem; } }
+  .summary-grid .stat .v.income{ color:var(--moss); }
+  .summary-grid .stat .v.expense{ color:var(--rust); }
+  .summary-grid .stat .k{
+    font-size:.66rem;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--slate);
+    margin-top:.15rem;
+  }
+  .summary-note{
+    font-size:.76rem;
+    color:var(--slate);
+    text-align:center;
+    margin-top:.7rem;
+    padding-top:.7rem;
+    border-top:1px solid var(--rule);
+  }
+
+  /* ---- quick add (mobile-first: stacked, big touch targets) ---- */
+  .type-toggle{
+    display:flex;
+    border:1px solid var(--rule);
+    border-radius:10px;
+    overflow:hidden;
+    margin-bottom:.9rem;
+  }
+  .type-toggle button{
+    flex:1;
+    border:none;
+    background:var(--paper);
+    color:var(--slate);
+    padding:.7rem;
+    font-size:.92rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .type-toggle button.active[data-type="income"]{ background:var(--moss); color:#fff; }
+  .type-toggle button.active[data-type="expense"]{ background:var(--rust); color:#fff; }
+
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:.35rem;
+    margin-bottom:.9rem;
+  }
+  .field .label{
+    font-size:.72rem;
+    color:var(--slate);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    font-weight:600;
+  }
+  .field-row{ display:flex; gap:.7rem; }
+  .field-row .field{ flex:1; min-width:0; }
+
+  input, select, .btn{ font-family:inherit; }
+  input[type="number"], input[type="date"], input[type="text"], select{
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:10px;
+    padding:.7rem .8rem;
+    color:var(--ink);
+    width:100%;
+    font-size:1rem;
+  }
+  .amount-input{
+    font-size:1.5rem;
+    font-weight:700;
+    padding:.6rem .8rem;
+  }
+  input:focus-visible, select:focus-visible, .btn:focus-visible, .icon-btn:focus-visible, .type-toggle button:focus-visible, .page-nav a:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:2px;
+  }
+  .btn{
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:10px;
+    padding:.85rem 1rem;
+    font-weight:700;
+    font-size:1rem;
+    cursor:pointer;
+    width:100%;
+  }
+  .btn:hover{ opacity:.9; }
+  .btn.small{ width:auto; padding:.5rem .9rem; font-size:.85rem; border-radius:8px; }
+
+  /* ---- entry list: card-per-row, mobile-first ---- */
+  .entry-list{ display:flex; flex-direction:column; gap:.6rem; }
+  .entry-card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-left:4px solid var(--rule);
+    border-radius:12px;
+    padding:.85rem 1rem;
+    display:flex;
+    align-items:center;
+    gap:.8rem;
+  }
+  .entry-card.income{ border-left-color:var(--moss); }
+  .entry-card.expense{ border-left-color:var(--rust); }
+  .entry-card .entry-main{ flex:1; min-width:0; }
+  .entry-card .entry-category{ font-weight:700; font-size:.95rem; }
+  .entry-card .entry-meta{
+    font-size:.76rem;
+    color:var(--slate);
+    margin-top:.15rem;
+    display:flex;
+    gap:.5rem;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .source-tag{
+    font-size:.62rem;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    font-weight:700;
+    padding:.12rem .4rem;
+    border-radius:99px;
+    background:var(--gold-soft);
+    color:var(--gold);
+  }
+  .entry-card .entry-amount{
+    font-weight:700;
+    font-size:1.05rem;
+    white-space:nowrap;
+  }
+  .entry-card .entry-amount.income{ color:var(--moss); }
+  .entry-card .entry-amount.expense{ color:var(--rust); }
+  .entry-card .entry-side{ display:flex; flex-direction:column; align-items:flex-end; gap:.3rem; }
+  .icon-btn{
+    background:none;
+    border:none;
+    cursor:pointer;
+    color:var(--rust);
+    font-size:.72rem;
+    font-weight:600;
+    padding:.3rem;
+    min-height:32px;
+  }
+  .icon-btn:hover{ text-decoration:underline; }
+  .empty{
+    padding:1.2rem 0;
+    color:var(--slate);
+    font-size:.88rem;
+    font-style:italic;
+    text-align:center;
+  }
+
+  .sync-status{ font-size:.78rem; text-align:center; margin-top:.6rem; }
+  .sync-status.ok{ color:var(--moss); }
+  .sync-status.warn{ color:var(--slate); }
+  .sync-status.error{ color:var(--rust); }
+  .sync-status.busy{ color:var(--gold); }
+
+  .disclaimer{
+    font-size:.76rem;
+    color:var(--slate);
+    border-top:1px dashed var(--rule);
+    padding-top:1.1rem;
+    margin-top:2rem;
+  }
+  .disclaimer p{ margin:.35rem 0; }
+</style>
+
+<div class="sheet">
+  <header class="top">
+    <div class="eyebrow">Personal finances</div>
+    <h1 class="serif">Income &amp; Expenses</h1>
+    <div class="spec-line">Salary, other income, and expenses — plus every paid tuition session, pulled in automatically.</div>
+  </header>
+
+  <div class="theme-toggle-wrap">
+    <nav class="page-nav">
+      <a href="index.html">Savings</a>
+      <a href="tuition.html">Tuition</a>
+      <a href="finance.html" class="active">Finances</a>
+    </nav>
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch between light and dark background" aria-pressed="false">
+      <span class="icon sun">&#9728;</span>
+      <span class="icon moon">&#9790;</span>
+      <span class="knob"></span>
+    </button>
+  </div>
+
+  <section>
+    <div class="card">
+      <div class="summary-grid">
+        <div class="stat">
+          <div class="v mono income" id="sum-income">&#8377;0</div>
+          <div class="k">Income</div>
+        </div>
+        <div class="stat">
+          <div class="v mono expense" id="sum-expense">&#8377;0</div>
+          <div class="k">Expenses</div>
+        </div>
+        <div class="stat">
+          <div class="v mono" id="sum-net">&#8377;0</div>
+          <div class="k">Net</div>
+        </div>
+      </div>
+      <div class="summary-note" id="summary-note"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Add income or expense</h2>
+    <div class="card">
+      <div class="type-toggle" id="type-toggle">
+        <button type="button" data-type="income" class="active">Income</button>
+        <button type="button" data-type="expense">Expense</button>
+      </div>
+      <div class="field">
+        <div class="label">Amount</div>
+        <input type="number" id="entry-amount" class="mono amount-input" min="0" step="10" placeholder="&#8377; 0" inputmode="decimal" />
+      </div>
+      <div class="field">
+        <div class="label">Category</div>
+        <input type="text" id="entry-category" list="category-suggestions" placeholder="e.g. Salary, Rent, Groceries" />
+        <datalist id="category-suggestions">
+          <option value="Salary"></option>
+          <option value="Other income"></option>
+          <option value="Rent"></option>
+          <option value="Groceries"></option>
+          <option value="Transport"></option>
+          <option value="Utilities"></option>
+          <option value="Shopping"></option>
+          <option value="Eating out"></option>
+          <option value="Health"></option>
+          <option value="Other"></option>
+        </datalist>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <div class="label">Date</div>
+          <input type="date" id="entry-date" />
+        </div>
+        <div class="field">
+          <div class="label">Note (optional)</div>
+          <input type="text" id="entry-note" placeholder="optional" />
+        </div>
+      </div>
+      <button class="btn" id="add-entry">Add entry</button>
+      <div class="sync-status" id="sync-status">Not connected &mdash; saving to this browser only.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>All entries <span id="entry-count" style="font-weight:400;color:var(--slate);font-size:.8rem;"></span></h2>
+    <div class="entry-list" id="entry-list">
+      <div class="empty">No entries yet &mdash; add your first one above.</div>
+    </div>
+  </section>
+
+  <div class="disclaimer">
+    <p><strong>How this works.</strong> Manual entries here sync to the same Google Sheet as your Tuition log (a "Finance" tab). Every <em>paid</em> tuition session shows up here automatically as income, tagged "Tuition" &mdash; they're read-only on this page; edit or unmark them on the Tuition page instead.</p>
+    <p>If sync isn't connected, entries still save to this browser, but won't show up on other devices until you connect Google Sheet sync (see google-sheets-sync/SETUP.md).</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var LS_KEY = "gb5finance.v1";
+  var THEME_KEY = "gb5tracker.theme";
+  var SHEET_URL_KEY = "gb5tuition.sheetUrl";
+  var SHEET_TOKEN_KEY = "gb5tuition.sheetToken";
+  var RUPEE = "₹";
+
+  // Same deployment as the Tuition page, so Finances connects automatically too.
+  var DEFAULT_SHEET_URL = "https://script.google.com/macros/s/AKfycbzxe6u5_Y3zif8VihQEoYx0olkSEJizirWP_3AK-BOpjpgAuPcM5RyPREsKOG9FwRow1w/exec";
+  var DEFAULT_SHEET_TOKEN = "77978f86-1f84-491b-b2ec-1b7e864edca8";
+
+  var state = { entries: [] };       // manual finance entries
+  var tuitionIncome = [];            // read-only, derived from paid Tuition sessions
+  var pendingType = "income";
+
+  function loadLocal(){
+    try {
+      var raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        var saved = JSON.parse(raw);
+        if (saved && Array.isArray(saved.entries)) state.entries = saved.entries;
+      }
+    } catch (e) { /* corrupt state, ignore */ }
+  }
+
+  function saveLocal(){
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+  }
+
+  var $ = function(id){ return document.getElementById(id); };
+  var fmt = function(n){
+    n = Math.round(n || 0);
+    return RUPEE + n.toLocaleString("en-IN");
+  };
+  var fmtDate = function(iso){
+    if (!iso) return "—";
+    var d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  };
+  var todayISO = function(){
+    var d = new Date();
+    var tz = d.getTimezoneOffset() * 60000;
+    return new Date(d - tz).toISOString().slice(0, 10);
+  };
+  var escapeHtml = function(str){
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  };
+  var normalizeDate = function(v){
+    if (!v) return "";
+    var s = String(v);
+    var m = s.match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : s;
+  };
+
+  // ---- Google Sheet sync (shared with the Tuition page) ----
+
+  function getSheetConfig(){
+    var url = "", token = "";
+    try {
+      url = localStorage.getItem(SHEET_URL_KEY) || "";
+      token = localStorage.getItem(SHEET_TOKEN_KEY) || "";
+    } catch (e) { /* storage unavailable */ }
+    if (!url) url = DEFAULT_SHEET_URL;
+    if (!token) token = DEFAULT_SHEET_TOKEN;
+    return { url: url, token: token };
+  }
+
+  function sheetConfigured(){
+    var cfg = getSheetConfig();
+    return !!(cfg.url && cfg.token);
+  }
+
+  function setSyncStatus(text, kind){
+    var el = $("sync-status");
+    if (!el) return;
+    el.textContent = text;
+    el.className = "sync-status " + (kind || "");
+  }
+
+  function sheetGet(){
+    var cfg = getSheetConfig();
+    var url = cfg.url + (cfg.url.indexOf("?") === -1 ? "?" : "&") + "token=" + encodeURIComponent(cfg.token);
+    return fetch(url).then(function(r){ return r.json(); });
+  }
+
+  function sheetPost(action, payload){
+    var cfg = getSheetConfig();
+    return fetch(cfg.url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ token: cfg.token, action: action, payload: payload })
+    }).then(function(r){ return r.json(); });
+  }
+
+  function syncAction(action, payload){
+    if (!sheetConfigured()) return;
+    setSyncStatus("Syncing…", "busy");
+    sheetPost(action, payload).then(function(res){
+      if (res && res.ok) {
+        setSyncStatus("Synced just now.", "ok");
+      } else {
+        setSyncStatus("Sync failed (" + ((res && res.error) || "unknown error") + ") — change is saved locally.", "error");
+      }
+    }).catch(function(){
+      setSyncStatus("Sync failed — no connection. Change is saved locally.", "error");
+    });
+  }
+
+  function pullFromSheet(){
+    if (!sheetConfigured()) {
+      setSyncStatus("Not connected — saving to this browser only.", "warn");
+      render();
+      return;
+    }
+    setSyncStatus("Syncing…", "busy");
+    sheetGet().then(function(data){
+      if (!data || !data.ok) {
+        setSyncStatus("Sync failed (" + ((data && data.error) || "network error") + ") — showing local data.", "error");
+        render();
+        return;
+      }
+      if (Array.isArray(data.finance)) {
+        state.entries = data.finance.map(function(f){
+          return {
+            id: String(f.id),
+            date: normalizeDate(f.date),
+            type: f.type === "expense" ? "expense" : "income",
+            category: f.category ? String(f.category) : "",
+            amount: Number(f.amount) || 0,
+            note: f.note ? String(f.note) : ""
+          };
+        });
+      }
+      if (Array.isArray(data.sessions)) {
+        var byChild = {};
+        (data.students || []).forEach(function(s){ byChild[String(s.id)] = String(s.name); });
+        tuitionIncome = data.sessions
+          .filter(function(s){ return s.paid === true || s.paid === "TRUE" || s.paid === "true"; })
+          .map(function(s){
+            var childName = byChild[String(s.childId)] || "Student";
+            return {
+              id: "tuition-" + s.id,
+              date: normalizeDate(s.date),
+              type: "income",
+              category: "Tuition — " + childName,
+              amount: Number(s.amount) || 0,
+              note: s.note ? String(s.note) : "",
+              source: "tuition"
+            };
+          });
+      }
+      saveLocal();
+      render();
+      setSyncStatus("Synced just now.", "ok");
+    }).catch(function(){
+      setSyncStatus("Sync failed — showing local data.", "error");
+      render();
+    });
+  }
+
+  // ---- rendering ----
+
+  function allEntries(){
+    return state.entries.concat(tuitionIncome);
+  }
+
+  function render(){
+    var entries = allEntries();
+    var income = entries.reduce(function(s, e){ return e.type === "income" ? s + (Number(e.amount) || 0) : s; }, 0);
+    var expense = entries.reduce(function(s, e){ return e.type === "expense" ? s + (Number(e.amount) || 0) : s; }, 0);
+    var tuitionTotal = tuitionIncome.reduce(function(s, e){ return s + (Number(e.amount) || 0); }, 0);
+
+    $("sum-income").textContent = fmt(income);
+    $("sum-expense").textContent = fmt(expense);
+    $("sum-net").textContent = fmt(income - expense);
+    $("summary-note").textContent = tuitionTotal > 0
+      ? "Includes " + fmt(tuitionTotal) + " from paid tuition sessions."
+      : "No paid tuition sessions yet.";
+
+    var count = entries.length;
+    $("entry-count").textContent = count ? "(" + count + ")" : "";
+
+    var list = $("entry-list");
+    list.innerHTML = "";
+    if (!count) {
+      list.innerHTML = '<div class="empty">No entries yet — add your first one above.</div>';
+      return;
+    }
+
+    var sorted = entries.slice().sort(function(a, b){ return b.date.localeCompare(a.date); });
+    sorted.forEach(function(entry){
+      var card = document.createElement("div");
+      card.className = "entry-card " + entry.type;
+      var sign = entry.type === "income" ? "+" : "−";
+      card.innerHTML =
+        '<div class="entry-main">' +
+          '<div class="entry-category">' + escapeHtml(entry.category || (entry.type === "income" ? "Income" : "Expense")) + '</div>' +
+          '<div class="entry-meta">' +
+            '<span>' + fmtDate(entry.date) + '</span>' +
+            (entry.note ? '<span>' + escapeHtml(entry.note) + '</span>' : "") +
+            (entry.source === "tuition" ? '<span class="source-tag">Tuition</span>' : "") +
+          '</div>' +
+        '</div>' +
+        '<div class="entry-side">' +
+          '<div class="entry-amount ' + entry.type + '">' + sign + ' ' + fmt(entry.amount) + '</div>' +
+          (entry.source === "tuition" ? "" : '<button class="icon-btn" data-id="' + entry.id + '">Remove</button>') +
+        '</div>';
+      list.appendChild(card);
+    });
+  }
+
+  // ---- add entry ----
+
+  $("type-toggle").addEventListener("click", function(e){
+    var btn = e.target.closest ? e.target.closest("button") : null;
+    if (!btn) return;
+    pendingType = btn.getAttribute("data-type");
+    var buttons = this.querySelectorAll("button");
+    for (var i = 0; i < buttons.length; i++) buttons[i].classList.toggle("active", buttons[i] === btn);
+  });
+
+  $("add-entry").addEventListener("click", function(){
+    var amountEl = $("entry-amount");
+    var categoryEl = $("entry-category");
+    var dateEl = $("entry-date");
+    var noteEl = $("entry-note");
+
+    var amount = Number(amountEl.value);
+    if (!amount || amount <= 0) { amountEl.focus(); return; }
+
+    var newEntry = {
+      id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      date: dateEl.value || todayISO(),
+      type: pendingType,
+      category: (categoryEl.value || "").trim().slice(0, 60) || (pendingType === "income" ? "Income" : "Expense"),
+      amount: amount,
+      note: (noteEl.value || "").slice(0, 80)
+    };
+    state.entries.push(newEntry);
+    amountEl.value = "";
+    categoryEl.value = "";
+    noteEl.value = "";
+    saveLocal();
+    render();
+    syncAction("addFinance", newEntry);
+  });
+
+  $("entry-list").addEventListener("click", function(e){
+    var btn = e.target.closest ? e.target.closest(".icon-btn") : null;
+    if (!btn) return;
+    var id = btn.getAttribute("data-id");
+    state.entries = state.entries.filter(function(entry){ return entry.id !== id; });
+    saveLocal();
+    render();
+    syncAction("deleteFinance", { id: id });
+  });
+
+  // ---- theme (shared across all pages) ----
+
+  function applyTheme(theme){
+    document.documentElement.setAttribute("data-theme", theme);
+    $("theme-toggle").setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+  }
+  function loadTheme(){
+    try {
+      var saved = localStorage.getItem(THEME_KEY);
+      if (saved === "dark" || saved === "light") return saved;
+    } catch (e) { /* storage unavailable */ }
+    return "light";
+  }
+  var currentTheme = loadTheme();
+  applyTheme(currentTheme);
+
+  $("theme-toggle").addEventListener("click", function(){
+    currentTheme = currentTheme === "dark" ? "light" : "dark";
+    applyTheme(currentTheme);
+    try { localStorage.setItem(THEME_KEY, currentTheme); } catch (e) { /* storage unavailable */ }
+  });
+
+  // ---- init ----
+
+  loadLocal();
+  $("entry-date").value = todayISO();
+  render();
+  if (sheetConfigured()) pullFromSheet(); else setSyncStatus("Not connected — saving to this browser only.", "warn");
+})();
+</script>

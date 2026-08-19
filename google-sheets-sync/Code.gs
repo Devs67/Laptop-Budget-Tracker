@@ -6,7 +6,9 @@
 
 var STUDENTS_SHEET = "Students";
 var SESSIONS_SHEET = "Sessions";
+var FINANCE_SHEET = "Finance";
 var SESSION_FIELDS = ["id", "childId", "date", "time", "durationMinutes", "amount", "note", "paid"];
+var FINANCE_FIELDS = ["id", "date", "type", "category", "amount", "note"];
 
 function setup() {
   var token = Utilities.getUuid();
@@ -61,7 +63,9 @@ function doGet(e) {
   try {
     var students = sheetToObjects_(getSheet_(STUDENTS_SHEET));
     var sessions = sheetToObjects_(getSheet_(SESSIONS_SHEET));
-    return jsonOut_({ ok: true, students: students, sessions: sessions });
+    var finance = [];
+    try { finance = sheetToObjects_(getSheet_(FINANCE_SHEET)); } catch (fe) { finance = []; }
+    return jsonOut_({ ok: true, students: students, sessions: sessions, finance: finance });
   } catch (err) {
     return jsonOut_({ ok: false, error: String(err) });
   }
@@ -115,6 +119,26 @@ function doPost(e) {
       var shDE = getSheet_(SESSIONS_SHEET);
       var rowDE = findRowIndexById_(shDE, payload.id);
       if (rowDE !== -1) shDE.deleteRow(rowDE);
+    } else if (action === "addFinance") {
+      var shAF = getSheet_(FINANCE_SHEET);
+      shAF.appendRow([payload.id, "", payload.type, payload.category, payload.amount, payload.note]);
+      var newRowF = shAF.getLastRow();
+      shAF.getRange(newRowF, 2).setNumberFormat("@");
+      shAF.getRange(newRowF, 2).setValue(String(payload.date || ""));
+    } else if (action === "updateFinance") {
+      var shUF = getSheet_(FINANCE_SHEET);
+      var rowUF = findRowIndexById_(shUF, payload.id);
+      if (rowUF === -1) return jsonOut_({ ok: false, error: "finance entry not found" });
+      FINANCE_FIELDS.forEach(function (f, i) {
+        if (payload[f] === undefined) return;
+        var col = i + 1;
+        if (f === "date") shUF.getRange(rowUF, col).setNumberFormat("@");
+        shUF.getRange(rowUF, col).setValue(payload[f]);
+      });
+    } else if (action === "deleteFinance") {
+      var shDF = getSheet_(FINANCE_SHEET);
+      var rowDF = findRowIndexById_(shDF, payload.id);
+      if (rowDF !== -1) shDF.deleteRow(rowDF);
     } else {
       return jsonOut_({ ok: false, error: "unknown action" });
     }

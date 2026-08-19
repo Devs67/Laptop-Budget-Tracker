@@ -1,4 +1,5 @@
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Tuition Log &amp; Invoices</title>
 <style>
   :root{
@@ -78,24 +79,27 @@
     display:flex;
     justify-content:space-between;
     align-items:center;
+    gap:.6rem;
+    flex-wrap:wrap;
     margin-bottom:1.6rem;
   }
   .page-nav{
     display:flex;
-    gap:.25rem;
+    gap:.2rem;
     background:var(--card);
     border:1px solid var(--rule);
     border-radius:99px;
-    padding:.25rem;
+    padding:.22rem;
     width:fit-content;
   }
   .page-nav a{
-    padding:.4rem 1rem;
+    padding:.42rem .8rem;
     border-radius:99px;
-    font-size:.82rem;
+    font-size:.78rem;
     font-weight:600;
     text-decoration:none;
     color:var(--slate);
+    white-space:nowrap;
   }
   .page-nav a.active{ background:var(--ink); color:var(--paper); }
   .page-nav a:hover:not(.active){ color:var(--gold); }
@@ -297,23 +301,38 @@
     border-top:1px solid var(--rule);
   }
 
-  .ledger{ border-top:1px solid var(--ink); }
+  .ledger{ display:flex; flex-direction:column; gap:.55rem; }
   .ledger .row{
-    display:grid;
-    grid-template-columns:5.5rem 4.5rem 3.6rem 1fr auto auto auto;
-    gap:.6rem;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-left:4px solid var(--rule);
+    border-radius:10px;
+    padding:.75rem .9rem;
+    display:flex;
     align-items:center;
-    padding:.55rem 0;
-    border-bottom:1px solid var(--rule);
+    gap:.7rem;
     font-size:.88rem;
   }
-  @media (max-width:640px){
-    .ledger .row{ grid-template-columns:1fr auto; row-gap:.25rem; }
+  .ledger .row.is-paid{ border-left-color:var(--moss); }
+  .ledger .row.is-owed{ border-left-color:var(--gold); }
+  .ledger .row .row-main{ flex:1; min-width:0; }
+  .ledger .row .row-top{
+    display:flex;
+    gap:.55rem;
+    flex-wrap:wrap;
+    align-items:baseline;
+    color:var(--slate);
+    font-size:.78rem;
   }
-  .ledger .row .date{ color:var(--slate); }
-  .ledger .row .time{ color:var(--slate); }
-  .ledger .row .duration{ color:var(--slate); }
-  .ledger .row .amount{ font-weight:600; text-align:right; }
+  .ledger .row .row-note{ font-size:.92rem; margin-top:.15rem; word-break:break-word; }
+  .ledger .row .row-side{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:.4rem;
+    flex-shrink:0;
+  }
+  .ledger .row .amount{ font-weight:700; font-size:1rem; white-space:nowrap; }
   .paid-pill{
     font-size:.62rem;
     text-transform:uppercase;
@@ -325,8 +344,8 @@
   }
   .paid-pill.owed{ background:var(--gold-soft); color:var(--gold); }
   .paid-pill.paid{ background:var(--moss-soft); color:var(--moss); }
-  .row-actions{ display:flex; gap:.4rem; white-space:nowrap; }
-  .icon-btn{ background:none; border:none; cursor:pointer; font-size:.78rem; padding:.2rem .3rem; font-weight:600; }
+  .row-actions{ display:flex; gap:.3rem; white-space:nowrap; }
+  .icon-btn{ background:none; border:none; cursor:pointer; font-size:.76rem; padding:.4rem .4rem; font-weight:600; min-height:34px; }
   .icon-btn.mark{ color:var(--moss); }
   .icon-btn.remove{ color:var(--rust); }
   .icon-btn:hover{ text-decoration:underline; }
@@ -458,6 +477,7 @@
     <nav class="page-nav">
       <a href="index.html">Savings</a>
       <a href="tuition.html" class="active">Tuition</a>
+      <a href="finance.html">Finances</a>
     </nav>
     <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch between light and dark background" aria-pressed="false">
       <span class="icon sun">&#9728;</span>
@@ -855,16 +875,22 @@
     } else {
       sorted.forEach(function(entry){
         rowsHtml +=
-          '<div class="row">' +
-            '<div class="date mono">' + fmtDate(entry.date) + '</div>' +
-            '<div class="time mono">' + fmtTime(entry.time) + '</div>' +
-            '<div class="duration mono">' + fmtDuration(entry.durationMinutes) + '</div>' +
-            '<div>' + (entry.note ? escapeHtml(entry.note) : "&nbsp;") + '</div>' +
-            '<div class="amount mono">' + fmt(entry.amount) + '</div>' +
-            '<div class="paid-pill ' + (entry.paid ? "paid" : "owed") + '">' + (entry.paid ? "Paid" : "Owed") + '</div>' +
-            '<div class="row-actions">' +
-              (entry.paid ? "" : '<button class="icon-btn mark" data-id="' + entry.id + '">Mark paid</button>') +
-              '<button class="icon-btn remove" data-id="' + entry.id + '">Remove</button>' +
+          '<div class="row ' + (entry.paid ? "is-paid" : "is-owed") + '">' +
+            '<div class="row-main">' +
+              '<div class="row-top">' +
+                '<span class="mono">' + fmtDate(entry.date) + '</span>' +
+                '<span class="mono">' + fmtTime(entry.time) + '</span>' +
+                '<span class="mono">' + fmtDuration(entry.durationMinutes) + '</span>' +
+              '</div>' +
+              (entry.note ? '<div class="row-note">' + escapeHtml(entry.note) + '</div>' : "") +
+            '</div>' +
+            '<div class="row-side">' +
+              '<div class="amount mono">' + fmt(entry.amount) + '</div>' +
+              '<div class="paid-pill ' + (entry.paid ? "paid" : "owed") + '">' + (entry.paid ? "Paid" : "Owed") + '</div>' +
+              '<div class="row-actions">' +
+                (entry.paid ? "" : '<button class="icon-btn mark" data-id="' + entry.id + '">Mark paid</button>') +
+                '<button class="icon-btn remove" data-id="' + entry.id + '">Remove</button>' +
+              '</div>' +
             '</div>' +
           '</div>';
       });

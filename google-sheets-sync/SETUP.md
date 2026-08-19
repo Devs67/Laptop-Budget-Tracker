@@ -24,7 +24,11 @@ GitHub Pages link. Don't post the deployment URL or token publicly.
    ```
    id   childId   date   time   durationMinutes   amount   note   paid
    ```
-4. Leave both tabs otherwise empty — the page will populate them.
+4. Add a third tab named `Finance`. In row 1, enter these headers exactly:
+   ```
+   id   date   type   category   amount   note
+   ```
+5. Leave all three tabs otherwise empty — the pages will populate them.
 
 ## 2. Add the script
 
@@ -66,3 +70,14 @@ the page pulls the latest data from the Sheet each time it loads.
 
 If you edit `Code.gs` again, you don't need a new deployment — use **Deploy → Manage deployments →
 edit (pencil) → New version → Deploy** to update the existing URL in place.
+
+## Already deployed and adding the Finances page?
+
+If you set this up before the Finances page existed, do this once:
+
+1. Add the `Finance` tab to your existing Sheet (step 4 above) with those exact headers.
+2. In the Apps Script editor, replace the contents of `Code.gs` with the current version from
+   this folder (it now has `addFinance` / `updateFinance` / `deleteFinance` actions and returns
+   a `finance` array from `doGet`).
+3. **Deploy → Manage deployments → pencil icon → New version → Deploy.** Same URL, same token —
+   nothing to reconnect on any page.
