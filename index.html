@@ -285,9 +285,8 @@
   }
   .goal-edit{
     display:flex;
-    gap:1rem;
-    flex-wrap:wrap;
-    align-items:flex-end;
+    flex-direction:column;
+    gap:.8rem;
     margin-top:1.2rem;
     padding-top:1rem;
     border-top:1px solid var(--rule);
@@ -301,6 +300,11 @@
     font-size:.72rem;
     text-transform:uppercase;
     letter-spacing:.05em;
+    width:100%;
+  }
+  @media (min-width:480px){
+    .goal-edit{ flex-direction:row; flex-wrap:wrap; align-items:flex-end; }
+    .goal-edit label{ width:auto; }
   }
   .goal-note{
     font-size:.78rem;
@@ -326,9 +330,8 @@
 
   .log-form{
     display:flex;
-    gap:.6rem;
-    flex-wrap:wrap;
-    align-items:flex-end;
+    flex-direction:column;
+    gap:.8rem;
     margin-bottom:1.2rem;
   }
   .log-form label{
@@ -339,17 +342,26 @@
     color:var(--slate);
     text-transform:uppercase;
     letter-spacing:.05em;
+    width:100%;
   }
-  .log-form .amt-field{ width:8rem; }
-  .log-form .source-field{ flex:1; min-width:9rem; }
-  .log-form .date-field{ width:9.5rem; }
+  .log-form .btn{ width:100%; }
+  @media (min-width:640px){
+    .log-form{ flex-direction:row; flex-wrap:wrap; align-items:flex-end; gap:.6rem; }
+    .log-form label{ width:auto; }
+    .log-form .amt-field{ width:8rem; }
+    .log-form .source-field{ flex:1; min-width:9rem; }
+    .log-form .date-field{ width:9.5rem; }
+    .log-form .btn{ width:auto; }
+  }
   .status-toggle{
     display:flex;
     border:1px solid var(--rule);
     border-radius:7px;
     overflow:hidden;
+    width:100%;
   }
   .status-toggle button{
+    flex:1;
     border:none;
     background:var(--paper);
     color:var(--slate);

@@ -190,11 +190,16 @@
 
   .add-child-row{
     display:flex;
+    flex-direction:column;
     gap:.6rem;
-    flex-wrap:wrap;
   }
-  .add-child-row input[name="new-child-name"]{ flex:1; min-width:8rem; }
-  .add-child-row input[name="new-child-rate"]{ width:8rem; }
+  .add-child-row .btn{ width:100%; }
+  @media (min-width:560px){
+    .add-child-row{ flex-direction:row; flex-wrap:wrap; }
+    .add-child-row input[name="new-child-name"]{ flex:1; min-width:8rem; }
+    .add-child-row input[name="new-child-rate"]{ width:8rem; }
+    .add-child-row .btn{ width:auto; }
+  }
   .settings-field{
     display:flex;
     flex-direction:column;
@@ -221,12 +226,17 @@
   }
   .sync-row{
     display:flex;
+    flex-direction:column;
     gap:.6rem;
-    flex-wrap:wrap;
     margin-bottom:.7rem;
   }
-  .sync-row input[name="sheet-url"]{ flex:2; min-width:12rem; }
-  .sync-row input[name="sheet-token"]{ flex:1; min-width:9rem; }
+  .sync-row .btn{ width:100%; }
+  @media (min-width:640px){
+    .sync-row{ flex-direction:row; flex-wrap:wrap; }
+    .sync-row input[name="sheet-url"]{ flex:2; min-width:12rem; }
+    .sync-row input[name="sheet-token"]{ flex:1; min-width:9rem; }
+    .sync-row .btn{ width:auto; }
+  }
   .sync-status{ font-size:.8rem; }
   .sync-status.ok{ color:var(--moss); }
   .sync-status.warn{ color:var(--slate); }
@@ -353,37 +363,37 @@
 
   .log-form{
     display:flex;
-    gap:.6rem;
-    flex-wrap:wrap;
-    align-items:flex-end;
+    flex-direction:column;
+    gap:.9rem;
     margin-bottom:1.2rem;
   }
-  .log-form label{
+  .log-form label, .duration-field{
     display:flex;
     flex-direction:column;
-    gap:.3rem;
+    gap:.35rem;
     font-size:.72rem;
     color:var(--slate);
     text-transform:uppercase;
     letter-spacing:.05em;
+    width:100%;
   }
-  .log-form .child-field{ min-width:9rem; }
-  .log-form .date-field{ width:9.5rem; }
-  .log-form .time-field{ width:8rem; }
-  .log-form .amt-field{ width:7.5rem; }
-  .log-form .note-field{ flex:1; min-width:8rem; }
-  .duration-field{
-    display:flex;
-    flex-direction:column;
-    gap:.3rem;
-    font-size:.72rem;
-    color:var(--slate);
-    text-transform:uppercase;
-    letter-spacing:.05em;
-  }
-  .duration-inputs{ display:flex; align-items:center; gap:.3rem; }
-  .duration-inputs input{ width:3.6rem; }
+  .log-form .field-pair{ display:flex; gap:.7rem; }
+  .log-form .field-pair > *{ flex:1; min-width:0; }
+  .log-form .btn{ width:100%; }
+  .duration-inputs{ display:flex; align-items:center; gap:.4rem; }
+  .duration-inputs input{ width:4.5rem; }
   .duration-inputs span{ font-size:.8rem; color:var(--slate); text-transform:none; letter-spacing:0; }
+  @media (min-width:680px){
+    .log-form{ flex-direction:row; flex-wrap:wrap; align-items:flex-end; gap:.6rem; }
+    .log-form .field-pair{ display:contents; }
+    .log-form label, .duration-field{ width:auto; }
+    .log-form .child-field{ min-width:9rem; }
+    .log-form .date-field{ width:9.5rem; }
+    .log-form .time-field{ width:8rem; }
+    .log-form .amt-field{ width:7.5rem; }
+    .log-form .note-field{ flex:1; min-width:8rem; }
+    .log-form .btn{ width:auto; }
+  }
 
   .grand-total-line{ font-size:.92rem; }
   .grand-total-line strong{ color:var(--gold); }
@@ -523,12 +533,14 @@
       <label class="child-field">Student
         <select id="entry-child"></select>
       </label>
-      <label class="date-field">Date
-        <input type="date" id="entry-date" />
-      </label>
-      <label class="time-field">Time
-        <input type="time" id="entry-time" />
-      </label>
+      <div class="field-pair">
+        <label class="date-field">Date
+          <input type="date" id="entry-date" />
+        </label>
+        <label class="time-field">Time
+          <input type="time" id="entry-time" />
+        </label>
+      </div>
       <div class="duration-field">Duration
         <div class="duration-inputs">
           <input type="number" id="entry-hours" min="0" step="1" placeholder="0" /><span>h</span>
