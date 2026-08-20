@@ -14,6 +14,10 @@ GitHub Pages link. Don't post the deployment URL or token publicly.
 
 ## 1. Create the Sheet
 
+**Headers are case-sensitive.** Type them exactly as shown below, all lowercase — `Date` or
+`Category ` (with a trailing space) will silently break that column, showing up on the page as
+blank/zero entries instead of an error.
+
 1. Go to [sheets.google.com](https://sheets.google.com) and create a new blank spreadsheet.
    Name it whatever you like, e.g. "Tuition Log".
 2. Rename the first tab to `Students`. In row 1, enter these headers exactly:
@@ -28,7 +32,15 @@ GitHub Pages link. Don't post the deployment URL or token publicly.
    ```
    id   date   type   category   amount   note
    ```
-5. Leave all three tabs otherwise empty — the pages will populate them.
+5. Add a fourth tab named `Loans`. In row 1, enter these headers exactly:
+   ```
+   id   name   totalAmount   monthlyPlan   note
+   ```
+6. Add a fifth tab named `LoanPayments`. In row 1, enter these headers exactly:
+   ```
+   id   loanId   date   amount   note
+   ```
+7. Leave all five tabs otherwise empty — the pages will populate them.
 
 ## 2. Add the script
 
@@ -71,13 +83,15 @@ the page pulls the latest data from the Sheet each time it loads.
 If you edit `Code.gs` again, you don't need a new deployment — use **Deploy → Manage deployments →
 edit (pencil) → New version → Deploy** to update the existing URL in place.
 
-## Already deployed and adding the Finances page?
+## Already deployed and adding a newer feature?
 
-If you set this up before the Finances page existed, do this once:
+Anytime a page gains a feature that needs new sheet tabs (Finance, then later Loans), do this once:
 
-1. Add the `Finance` tab to your existing Sheet (step 4 above) with those exact headers.
+1. Add whichever tabs you're missing (steps 4–6 above) with those exact headers.
 2. In the Apps Script editor, replace the contents of `Code.gs` with the current version from
-   this folder (it now has `addFinance` / `updateFinance` / `deleteFinance` actions and returns
-   a `finance` array from `doGet`).
+   this folder.
 3. **Deploy → Manage deployments → pencil icon → New version → Deploy.** Same URL, same token —
    nothing to reconnect on any page.
+
+(`doGet` returns an empty array for any tab that doesn't exist yet rather than failing, so pages
+degrade gracefully until you add the tab — but writes for that feature won't persist until you do.)

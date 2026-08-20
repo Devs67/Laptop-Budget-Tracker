@@ -15,18 +15,19 @@
     --moss:#3D6B49;
     --moss-soft:#3D6B4940;
     --rust:#A2432B;
+    --rust-soft:#A2432B26;
     --grid-line:#1C2B2209;
     --shadow: 0 1px 0 rgba(28,43,34,.06);
   }
   :root[data-theme="dark"]{
     --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E; --track-bg:#2E2A20;
-    --slate:#97A08C; --gold:#D2A23F; --gold-soft:#D2A23F26; --gold-fill:#D2A23F80; --moss:#5C9A6C; --moss-soft:#5C9A6C40; --rust:#C2654A;
+    --slate:#97A08C; --gold:#D2A23F; --gold-soft:#D2A23F26; --gold-fill:#D2A23F80; --moss:#5C9A6C; --moss-soft:#5C9A6C40; --rust:#C2654A; --rust-soft:#C2654A26;
     --grid-line:#EAE4D00D;
     --shadow: 0 1px 0 rgba(0,0,0,.3);
   }
   :root[data-theme="light"]{
     --ink:#1C2B22; --paper:#F6F1E4; --card:#FFFDF6; --rule:#DCD3B8; --track-bg:#DCD3B8;
-    --slate:#5B6856; --gold:#A97A22; --gold-soft:#A97A2226; --gold-fill:#A97A2280; --moss:#3D6B49; --moss-soft:#3D6B4940; --rust:#A2432B;
+    --slate:#5B6856; --gold:#A97A22; --gold-soft:#A97A2226; --gold-fill:#A97A2280; --moss:#3D6B49; --moss-soft:#3D6B4940; --rust:#A2432B; --rust-soft:#A2432B26;
     --grid-line:#1C2B2209;
     --shadow: 0 1px 0 rgba(28,43,34,.06);
   }
@@ -398,6 +399,84 @@
   .grand-total-line{ font-size:.92rem; }
   .grand-total-line strong{ color:var(--gold); }
 
+  .cal-nav{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:.7rem;
+  }
+  .cal-nav button{
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-radius:8px;
+    width:34px;
+    height:34px;
+    cursor:pointer;
+    font-size:1.05rem;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .cal-nav .cal-label{ font-weight:700; font-size:.92rem; }
+  .cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:.3rem;
+  }
+  .cal-weekday{
+    font-size:.62rem;
+    text-align:center;
+    color:var(--slate);
+    text-transform:uppercase;
+    font-weight:700;
+    padding-bottom:.2rem;
+  }
+  .cal-cell{
+    aspect-ratio:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:8px;
+    font-size:.78rem;
+    font-weight:700;
+  }
+  .cal-cell.empty{ visibility:hidden; }
+  .cal-cell.went{ background:var(--moss); color:#fff; }
+  .cal-cell.missed{ background:var(--rust-soft); color:var(--rust); }
+  .cal-cell.future{ background:var(--paper); border:1px dashed var(--rule); color:var(--slate); }
+  .cal-cell.untracked{ background:var(--paper); color:var(--slate); opacity:.35; }
+  .cal-cell.today{ outline:2px solid var(--gold); outline-offset:1px; }
+  .cal-legend{
+    display:flex;
+    gap:1rem;
+    flex-wrap:wrap;
+    font-size:.72rem;
+    color:var(--slate);
+    margin-top:.8rem;
+  }
+  .cal-legend span{ display:inline-flex; align-items:center; gap:.35rem; }
+  .cal-legend .dot{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+  .cal-legend .dot.went{ background:var(--moss); }
+  .cal-legend .dot.missed{ background:var(--rust); }
+
+  .week-list{ display:flex; flex-direction:column; gap:.5rem; }
+  .week-row{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-left:4px solid var(--rule);
+    border-radius:10px;
+    padding:.7rem .9rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:.7rem;
+    flex-wrap:wrap;
+  }
+  .week-row.current{ border-left-color:var(--gold); }
+  .week-row .week-label{ font-weight:700; font-size:.88rem; }
+  .week-row .week-sub{ font-size:.74rem; color:var(--slate); margin-top:.1rem; }
+  .week-row .week-amounts{ text-align:right; font-size:.85rem; }
+  .week-row .week-amounts .owed{ color:var(--gold); font-weight:700; }
+
   .overlay{
     position:fixed;
     inset:0;
@@ -518,6 +597,29 @@
         <div class="sync-status" id="sync-status">Not connected &mdash; saving to this browser only. See google-sheets-sync/SETUP.md.</div>
       </div>
     </div>
+  </section>
+
+  <section>
+    <h2>Tuition calendar</h2>
+    <p class="section-sub">Green = at least one session that day, across every student. Red = a day with none, since your first ever logged session.</p>
+    <div class="card">
+      <div class="cal-nav">
+        <button type="button" id="cal-all-prev" aria-label="Previous month">&#8249;</button>
+        <div class="cal-label" id="cal-all-label"></div>
+        <button type="button" id="cal-all-next" aria-label="Next month">&#8250;</button>
+      </div>
+      <div class="cal-grid" id="cal-all-grid"></div>
+      <div class="cal-legend">
+        <span><span class="dot went"></span> Had a session</span>
+        <span><span class="dot missed"></span> No session</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Weekly summary</h2>
+    <p class="section-sub">What you're owed, grouped by week (Monday&ndash;Sunday), across every student.</p>
+    <div class="week-list" id="week-list"></div>
   </section>
 
   <section>
@@ -659,6 +761,8 @@
 
   var state = loadState();
   var selectedChildId = state.children.length ? state.children[0].id : null;
+  var studentCalOffset = 0;
+  var allCalOffset = 0;
 
   function saveState(){
     try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
@@ -719,6 +823,66 @@
     var m = s.match(/(\d{2}):(\d{2})/);
     return m ? (m[1] + ":" + m[2]) : s;
   };
+  var pad2 = function(n){ return n < 10 ? "0" + n : "" + n; };
+  var MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  function datesSetFromSessions(sessions){
+    var set = {};
+    sessions.forEach(function(s){ if (s.date) set[s.date] = true; });
+    return set;
+  }
+
+  function buildCalendarGrid(sessionDatesSet, offset){
+    var base = new Date();
+    var monthDate = new Date(base.getFullYear(), base.getMonth() + offset, 1);
+    var year = monthDate.getFullYear();
+    var month = monthDate.getMonth();
+    var firstWeekday = monthDate.getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var todayStr = todayISO();
+
+    var dates = Object.keys(sessionDatesSet);
+    var earliest = dates.length ? dates.slice().sort()[0] : null;
+
+    var html = "";
+    ["Su","Mo","Tu","We","Th","Fr","Sa"].forEach(function(w){ html += '<div class="cal-weekday">' + w + '</div>'; });
+    for (var i = 0; i < firstWeekday; i++) html += '<div class="cal-cell empty"></div>';
+
+    for (var d = 1; d <= daysInMonth; d++) {
+      var dateStr = year + "-" + pad2(month + 1) + "-" + pad2(d);
+      var cls = "cal-cell";
+      if (dateStr === todayStr) cls += " today";
+      if (dateStr > todayStr) {
+        cls += " future";
+      } else if (!earliest || dateStr < earliest) {
+        cls += " untracked";
+      } else if (sessionDatesSet[dateStr]) {
+        cls += " went";
+      } else {
+        cls += " missed";
+      }
+      html += '<div class="' + cls + '">' + d + '</div>';
+    }
+
+    return { html: html, label: MONTH_NAMES[month] + " " + year };
+  }
+
+  function mondayOf(dateStr){
+    var d = new Date(dateStr + "T00:00:00");
+    var day = d.getDay();
+    var diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    return d;
+  }
+  function isoFromDate(d){
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+  function fmtWeekRange(mondayDate){
+    var sunday = new Date(mondayDate);
+    sunday.setDate(sunday.getDate() + 6);
+    var opts = { day: "numeric", month: "short" };
+    return mondayDate.toLocaleDateString("en-IN", opts) + " – " + sunday.toLocaleDateString("en-IN", opts);
+  }
 
   // ---- Google Sheet sync ----
 
@@ -880,6 +1044,7 @@
     }
     var totals = childTotals(child.id);
     var sorted = totals.sessions.slice().sort(function(a, b){ return (b.date + b.time).localeCompare(a.date + a.time); });
+    var calResult = buildCalendarGrid(datesSetFromSessions(totals.sessions), studentCalOffset);
 
     var rowsHtml = "";
     if (!sorted.length) {
@@ -920,7 +1085,17 @@
           '<div><div class="k">Paid</div><div class="v mono">' + fmt(totals.paid) + '</div></div>' +
           '<div><div class="k">Owed</div><div class="v mono owed">' + fmt(totals.owed) + '</div></div>' +
         '</div>' +
-        '<div class="ledger">' + rowsHtml + '</div>' +
+        '<div class="cal-nav">' +
+          '<button type="button" class="cal-prev" aria-label="Previous month">&#8249;</button>' +
+          '<div class="cal-label">' + calResult.label + '</div>' +
+          '<button type="button" class="cal-next" aria-label="Next month">&#8250;</button>' +
+        '</div>' +
+        '<div class="cal-grid">' + calResult.html + '</div>' +
+        '<div class="cal-legend">' +
+          '<span><span class="dot went"></span> Had a session</span>' +
+          '<span><span class="dot missed"></span> No session</span>' +
+        '</div>' +
+        '<div class="ledger" style="margin-top:1.1rem;">' + rowsHtml + '</div>' +
         '<div class="detail-actions">' +
           '<button class="icon-btn remove" id="remove-student">Remove student</button>' +
           '<button class="btn small" id="detail-invoice-btn">Generate invoice</button>' +
@@ -928,10 +1103,56 @@
       '</div>';
   }
 
+  function renderAllCalendar(){
+    var result = buildCalendarGrid(datesSetFromSessions(state.entries), allCalOffset);
+    $("cal-all-grid").innerHTML = result.html;
+    $("cal-all-label").textContent = result.label;
+  }
+
+  function renderWeekSummary(){
+    var weeks = {};
+    state.entries.forEach(function(entry){
+      if (!entry.date) return;
+      var mon = mondayOf(entry.date);
+      var key = isoFromDate(mon);
+      if (!weeks[key]) weeks[key] = { mondayDate: mon, sessions: [], billed: 0, paid: 0 };
+      weeks[key].sessions.push(entry);
+      weeks[key].billed += Number(entry.amount) || 0;
+      if (entry.paid) weeks[key].paid += Number(entry.amount) || 0;
+    });
+
+    var keys = Object.keys(weeks).sort().reverse();
+    var currentWeekKey = isoFromDate(mondayOf(todayISO()));
+    var list = $("week-list");
+    list.innerHTML = "";
+    if (!keys.length) {
+      list.innerHTML = '<div class="empty">No sessions logged yet.</div>';
+      return;
+    }
+    keys.forEach(function(key){
+      var w = weeks[key];
+      var owed = w.billed - w.paid;
+      var row = document.createElement("div");
+      row.className = "week-row" + (key === currentWeekKey ? " current" : "");
+      row.innerHTML =
+        '<div>' +
+          '<div class="week-label">' + fmtWeekRange(w.mondayDate) + (key === currentWeekKey ? " (this week)" : "") + '</div>' +
+          '<div class="week-sub">' + w.sessions.length + " " + (w.sessions.length === 1 ? "session" : "sessions") + '</div>' +
+        '</div>' +
+        '<div class="week-amounts">' +
+          '<div>' + fmt(w.billed) + ' billed</div>' +
+          '<div class="owed">' + fmt(owed) + ' owed</div>' +
+        '</div>';
+      list.appendChild(row);
+    });
+  }
+
   function render(){
     renderChildSelect();
     renderStudentButtons();
     renderStudentDetail();
+    renderAllCalendar();
+    renderWeekSummary();
 
     var grand = { count: 0, billed: 0, paid: 0, owed: 0 };
     state.children.forEach(function(child){
@@ -977,9 +1198,14 @@
     var btn = e.target.closest ? e.target.closest(".student-btn") : null;
     if (!btn) return;
     var id = btn.getAttribute("data-child");
-    selectedChildId = selectedChildId === id ? null : id;
+    var newSelection = selectedChildId === id ? null : id;
+    if (newSelection !== selectedChildId) studentCalOffset = 0;
+    selectedChildId = newSelection;
     render();
   });
+
+  $("cal-all-prev").addEventListener("click", function(){ allCalOffset--; renderAllCalendar(); });
+  $("cal-all-next").addEventListener("click", function(){ allCalOffset++; renderAllCalendar(); });
 
   $("student-detail").addEventListener("input", function(e){
     if (e.target.id !== "detail-rate") return;
@@ -997,6 +1223,11 @@
     var removeBtn = e.target.closest ? e.target.closest(".icon-btn.remove:not(#remove-student)") : null;
     var removeStudentBtn = e.target.closest ? e.target.closest("#remove-student") : null;
     var invoiceBtn = e.target.closest ? e.target.closest("#detail-invoice-btn") : null;
+    var calPrevBtn = e.target.closest ? e.target.closest(".cal-prev") : null;
+    var calNextBtn = e.target.closest ? e.target.closest(".cal-next") : null;
+
+    if (calPrevBtn) { studentCalOffset--; renderStudentDetail(); return; }
+    if (calNextBtn) { studentCalOffset++; renderStudentDetail(); return; }
 
     if (markBtn) {
       var id = markBtn.getAttribute("data-id");

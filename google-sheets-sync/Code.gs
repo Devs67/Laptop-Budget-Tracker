@@ -7,6 +7,8 @@
 var STUDENTS_SHEET = "Students";
 var SESSIONS_SHEET = "Sessions";
 var FINANCE_SHEET = "Finance";
+var LOANS_SHEET = "Loans";
+var LOAN_PAYMENTS_SHEET = "LoanPayments";
 var SESSION_FIELDS = ["id", "childId", "date", "time", "durationMinutes", "amount", "note", "paid"];
 var FINANCE_FIELDS = ["id", "date", "type", "category", "amount", "note"];
 
@@ -38,7 +40,9 @@ function getSheet_(name) {
 function sheetToObjects_(sheet) {
   var values = sheet.getDataRange().getValues();
   if (values.length < 2) return [];
-  var headers = values[0];
+  // Trim only (not lowercase) so a stray trailing space doesn't silently break
+  // the id->field mapping, while camelCase keys like "childId" still match exactly.
+  var headers = values[0].map(function (h) { return String(h).trim(); });
   return values.slice(1)
     .filter(function (r) { return r[0] !== "" && r[0] !== null; })
     .map(function (r) {
@@ -65,7 +69,11 @@ function doGet(e) {
     var sessions = sheetToObjects_(getSheet_(SESSIONS_SHEET));
     var finance = [];
     try { finance = sheetToObjects_(getSheet_(FINANCE_SHEET)); } catch (fe) { finance = []; }
-    return jsonOut_({ ok: true, students: students, sessions: sessions, finance: finance });
+    var loans = [];
+    try { loans = sheetToObjects_(getSheet_(LOANS_SHEET)); } catch (le) { loans = []; }
+    var loanPayments = [];
+    try { loanPayments = sheetToObjects_(getSheet_(LOAN_PAYMENTS_SHEET)); } catch (lpe) { loanPayments = []; }
+    return jsonOut_({ ok: true, students: students, sessions: sessions, finance: finance, loans: loans, loanPayments: loanPayments });
   } catch (err) {
     return jsonOut_({ ok: false, error: String(err) });
   }
@@ -139,6 +147,22 @@ function doPost(e) {
       var shDF = getSheet_(FINANCE_SHEET);
       var rowDF = findRowIndexById_(shDF, payload.id);
       if (rowDF !== -1) shDF.deleteRow(rowDF);
+    } else if (action === "addLoan") {
+      getSheet_(LOANS_SHEET).appendRow([payload.id, payload.name, payload.totalAmount, payload.monthlyPlan, payload.note]);
+    } else if (action === "deleteLoan") {
+      var shDL = getSheet_(LOANS_SHEET);
+      var rowDL = findRowIndexById_(shDL, payload.id);
+      if (rowDL !== -1) shDL.deleteRow(rowDL);
+    } else if (action === "addLoanPayment") {
+      var shALP = getSheet_(LOAN_PAYMENTS_SHEET);
+      shALP.appendRow([payload.id, payload.loanId, "", payload.amount, payload.note]);
+      var newRowLP = shALP.getLastRow();
+      shALP.getRange(newRowLP, 3).setNumberFormat("@");
+      shALP.getRange(newRowLP, 3).setValue(String(payload.date || ""));
+    } else if (action === "deleteLoanPayment") {
+      var shDLP = getSheet_(LOAN_PAYMENTS_SHEET);
+      var rowDLP = findRowIndexById_(shDLP, payload.id);
+      if (rowDLP !== -1) shDLP.deleteRow(rowDLP);
     } else {
       return jsonOut_({ ok: false, error: "unknown action" });
     }

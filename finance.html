@@ -263,6 +263,23 @@
   .btn:hover{ opacity:.9; }
   .btn.small{ width:auto; padding:.5rem .9rem; font-size:.85rem; border-radius:8px; }
 
+  /* ---- two-column income/expense ---- */
+  .two-col{ display:flex; flex-direction:column; gap:1.4rem; }
+  @media (min-width:640px){
+    .two-col{ flex-direction:row; align-items:flex-start; }
+    .two-col > div{ flex:1; min-width:0; }
+  }
+  .col-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:.6rem;
+  }
+  .col-head h3{ margin:0; font-size:.9rem; font-weight:700; }
+  .col-head .col-total{ font-weight:700; font-size:.95rem; }
+  .col-head.income h3, .col-head.income .col-total{ color:var(--moss); }
+  .col-head.expense h3, .col-head.expense .col-total{ color:var(--rust); }
+
   /* ---- entry list: card-per-row, mobile-first ---- */
   .entry-list{ display:flex; flex-direction:column; gap:.6rem; }
   .entry-card{
@@ -324,6 +341,26 @@
     font-style:italic;
     text-align:center;
   }
+
+  .loan-card{ margin-bottom:1rem; }
+  .loan-card:last-child{ margin-bottom:0; }
+  .loan-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.8rem; gap:.6rem; }
+  .loan-name{ font-weight:700; font-size:1rem; }
+  .loan-sub{ font-size:.78rem; color:var(--slate); margin-top:.1rem; }
+  .loan-track{ height:10px; border-radius:99px; background:var(--track-bg); overflow:hidden; margin-bottom:.4rem; }
+  .loan-track .fill{ height:100%; background:var(--moss); border-radius:99px; }
+  .loan-figures{ display:flex; justify-content:space-between; gap:.6rem; font-size:.78rem; color:var(--slate); margin-bottom:1rem; flex-wrap:wrap; }
+  .loan-figures strong{ color:var(--ink); font-weight:700; }
+  .loan-pay-form{ display:flex; flex-direction:column; gap:.5rem; margin-bottom:.8rem; }
+  .loan-pay-form .btn{ width:100%; }
+  @media (min-width:480px){
+    .loan-pay-form{ flex-direction:row; }
+    .loan-pay-form input{ flex:1; }
+    .loan-pay-form .btn{ width:auto; }
+  }
+  .loan-payments{ border-top:1px dashed var(--rule); padding-top:.6rem; font-size:.78rem; color:var(--slate); }
+  .loan-payments .lp-row{ display:flex; justify-content:space-between; align-items:center; gap:.5rem; padding:.3rem 0; }
+  .loan-payments .lp-amount{ color:var(--ink); font-weight:600; }
 
   .sync-status{ font-size:.78rem; text-align:center; margin-top:.6rem; }
   .sync-status.ok{ color:var(--moss); }
@@ -425,13 +462,55 @@
 
   <section>
     <h2>All entries <span id="entry-count" style="font-weight:400;color:var(--slate);font-size:.8rem;"></span></h2>
-    <div class="entry-list" id="entry-list">
-      <div class="empty">No entries yet &mdash; add your first one above.</div>
+    <div class="two-col">
+      <div>
+        <div class="col-head income">
+          <h3>Income</h3>
+          <span class="col-total mono" id="income-col-total">&#8377;0</span>
+        </div>
+        <div class="entry-list" id="income-list">
+          <div class="empty">No income yet.</div>
+        </div>
+      </div>
+      <div>
+        <div class="col-head expense">
+          <h3>Expenses</h3>
+          <span class="col-total mono" id="expense-col-total">&#8377;0</span>
+        </div>
+        <div class="entry-list" id="expense-list">
+          <div class="empty">No expenses yet.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Loans &amp; long-term repayments</h2>
+    <p class="section-sub">Debts you're paying off over time &mdash; a personal loan, a card balance, money you owe someone. These stay separate from the Income/Expense totals above; plan a monthly amount and chip away at it.</p>
+    <div class="card">
+      <div class="field">
+        <div class="label">Loan / debt name</div>
+        <input type="text" id="loan-name" placeholder="e.g. Personal loan, Credit card" />
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <div class="label">Total amount owed</div>
+          <input type="number" id="loan-total" class="mono" min="0" step="100" placeholder="&#8377; 0" />
+        </div>
+        <div class="field">
+          <div class="label">Monthly plan (optional)</div>
+          <input type="number" id="loan-monthly" class="mono" min="0" step="100" placeholder="&#8377; 0" />
+        </div>
+      </div>
+      <button class="btn" id="add-loan">Add loan</button>
+    </div>
+    <div id="loan-list" style="margin-top:1rem;">
+      <div class="empty">No loans added yet.</div>
     </div>
   </section>
 
   <div class="disclaimer">
-    <p><strong>How this works.</strong> Manual entries here sync to the same Google Sheet as your Tuition log (a "Finance" tab). Every <em>paid</em> tuition session shows up here automatically as income, tagged "Tuition" &mdash; they're read-only on this page; edit or unmark them on the Tuition page instead.</p>
+    <p><strong>How this works.</strong> Manual entries here sync to the same Google Sheet as your Tuition log (a "Finance" tab, plus "Loans" and "LoanPayments" for the section above). Every <em>paid</em> tuition session shows up in Income automatically, tagged "Tuition" &mdash; they're read-only here; edit or unmark them on the Tuition page instead.</p>
     <p>If sync isn't connected, entries still save to this browser, but won't show up on other devices until you connect Google Sheet sync (see google-sheets-sync/SETUP.md).</p>
   </div>
 </div>
@@ -450,7 +529,7 @@
   var DEFAULT_SHEET_URL = "https://script.google.com/macros/s/AKfycbzxe6u5_Y3zif8VihQEoYx0olkSEJizirWP_3AK-BOpjpgAuPcM5RyPREsKOG9FwRow1w/exec";
   var DEFAULT_SHEET_TOKEN = "77978f86-1f84-491b-b2ec-1b7e864edca8";
 
-  var state = { entries: [] };       // manual finance entries
+  var state = { entries: [], loans: [], loanPayments: [] };  // manual finance entries + loans
   var tuitionIncome = [];            // read-only, derived from paid Tuition sessions
   var pendingType = "income";
 
@@ -460,6 +539,8 @@
       if (raw) {
         var saved = JSON.parse(raw);
         if (saved && Array.isArray(saved.entries)) state.entries = saved.entries;
+        if (saved && Array.isArray(saved.loans)) state.loans = saved.loans;
+        if (saved && Array.isArray(saved.loanPayments)) state.loanPayments = saved.loanPayments;
       }
     } catch (e) { /* corrupt state, ignore */ }
   }
@@ -593,6 +674,28 @@
             };
           });
       }
+      if (Array.isArray(data.loans)) {
+        state.loans = data.loans.map(function(l){
+          return {
+            id: String(l.id),
+            name: l.name ? String(l.name) : "Loan",
+            totalAmount: Number(l.totalAmount) || 0,
+            monthlyPlan: Number(l.monthlyPlan) || 0,
+            note: l.note ? String(l.note) : ""
+          };
+        });
+      }
+      if (Array.isArray(data.loanPayments)) {
+        state.loanPayments = data.loanPayments.map(function(p){
+          return {
+            id: String(p.id),
+            loanId: String(p.loanId),
+            date: normalizeDate(p.date),
+            amount: Number(p.amount) || 0,
+            note: p.note ? String(p.note) : ""
+          };
+        });
+      }
       saveLocal();
       render();
       setSyncStatus("Synced just now.", "ok");
@@ -608,29 +711,13 @@
     return state.entries.concat(tuitionIncome);
   }
 
-  function render(){
-    var entries = allEntries();
-    var income = entries.reduce(function(s, e){ return e.type === "income" ? s + (Number(e.amount) || 0) : s; }, 0);
-    var expense = entries.reduce(function(s, e){ return e.type === "expense" ? s + (Number(e.amount) || 0) : s; }, 0);
-    var tuitionTotal = tuitionIncome.reduce(function(s, e){ return s + (Number(e.amount) || 0); }, 0);
-
-    $("sum-income").textContent = fmt(income);
-    $("sum-expense").textContent = fmt(expense);
-    $("sum-net").textContent = fmt(income - expense);
-    $("summary-note").textContent = tuitionTotal > 0
-      ? "Includes " + fmt(tuitionTotal) + " from paid tuition sessions."
-      : "No paid tuition sessions yet.";
-
-    var count = entries.length;
-    $("entry-count").textContent = count ? "(" + count + ")" : "";
-
-    var list = $("entry-list");
+  function renderColumn(containerId, entries, type){
+    var list = $(containerId);
     list.innerHTML = "";
-    if (!count) {
-      list.innerHTML = '<div class="empty">No entries yet — add your first one above.</div>';
+    if (!entries.length) {
+      list.innerHTML = '<div class="empty">No ' + (type === "income" ? "income" : "expenses") + ' yet.</div>';
       return;
     }
-
     var sorted = entries.slice().sort(function(a, b){ return b.date.localeCompare(a.date); });
     sorted.forEach(function(entry){
       var card = document.createElement("div");
@@ -651,6 +738,84 @@
         '</div>';
       list.appendChild(card);
     });
+  }
+
+  function loanTotals(loan){
+    var payments = state.loanPayments.filter(function(p){ return p.loanId === loan.id; });
+    var paid = payments.reduce(function(s, p){ return s + (Number(p.amount) || 0); }, 0);
+    var total = Number(loan.totalAmount) || 0;
+    var remaining = Math.max(0, total - paid);
+    var pct = total > 0 ? Math.min(100, (paid / total) * 100) : 0;
+    return { payments: payments, paid: paid, remaining: remaining, pct: pct };
+  }
+
+  function renderLoans(){
+    var container = $("loan-list");
+    container.innerHTML = "";
+    if (!state.loans.length) {
+      container.innerHTML = '<div class="empty">No loans added yet.</div>';
+      return;
+    }
+    state.loans.forEach(function(loan){
+      var t = loanTotals(loan);
+      var paymentsHtml;
+      if (!t.payments.length) {
+        paymentsHtml = '<div class="empty" style="padding:.3rem 0;">No payments logged yet.</div>';
+      } else {
+        paymentsHtml = t.payments.slice().sort(function(a, b){ return b.date.localeCompare(a.date); }).map(function(p){
+          return '<div class="lp-row"><span>' + fmtDate(p.date) + '</span><span class="lp-amount mono">' + fmt(p.amount) + '</span>' +
+            '<button class="icon-btn" data-remove-payment="' + p.id + '">Remove</button></div>';
+        }).join("");
+      }
+
+      var card = document.createElement("div");
+      card.className = "loan-card card";
+      card.innerHTML =
+        '<div class="loan-head">' +
+          '<div>' +
+            '<div class="loan-name">' + escapeHtml(loan.name) + '</div>' +
+            (loan.monthlyPlan > 0 ? '<div class="loan-sub">Plan: ' + fmt(loan.monthlyPlan) + '/month</div>' : "") +
+          '</div>' +
+          '<button class="icon-btn" data-remove-loan="' + loan.id + '">Remove</button>' +
+        '</div>' +
+        '<div class="loan-track"><div class="fill" style="width:' + t.pct + '%"></div></div>' +
+        '<div class="loan-figures">' +
+          '<span><strong class="mono">' + fmt(t.paid) + '</strong> paid</span>' +
+          '<span><strong class="mono">' + fmt(t.remaining) + '</strong> remaining of ' + fmt(loan.totalAmount) + '</span>' +
+        '</div>' +
+        '<div class="loan-pay-form">' +
+          '<input type="number" class="mono loan-pay-amount" placeholder="Amount" min="0" step="100" />' +
+          '<input type="date" class="loan-pay-date" value="' + todayISO() + '" />' +
+          '<button class="btn small" data-log-payment="' + loan.id + '">Log payment</button>' +
+        '</div>' +
+        '<div class="loan-payments">' + paymentsHtml + '</div>';
+      container.appendChild(card);
+    });
+  }
+
+  function render(){
+    var entries = allEntries();
+    var income = entries.reduce(function(s, e){ return e.type === "income" ? s + (Number(e.amount) || 0) : s; }, 0);
+    var expense = entries.reduce(function(s, e){ return e.type === "expense" ? s + (Number(e.amount) || 0) : s; }, 0);
+    var tuitionTotal = tuitionIncome.reduce(function(s, e){ return s + (Number(e.amount) || 0); }, 0);
+
+    $("sum-income").textContent = fmt(income);
+    $("sum-expense").textContent = fmt(expense);
+    $("sum-net").textContent = fmt(income - expense);
+    $("summary-note").textContent = tuitionTotal > 0
+      ? "Includes " + fmt(tuitionTotal) + " from paid tuition sessions."
+      : "No paid tuition sessions yet.";
+
+    $("entry-count").textContent = entries.length ? "(" + entries.length + ")" : "";
+
+    var incomeEntries = entries.filter(function(e){ return e.type === "income"; });
+    var expenseEntries = entries.filter(function(e){ return e.type === "expense"; });
+    $("income-col-total").textContent = fmt(income);
+    $("expense-col-total").textContent = fmt(expense);
+    renderColumn("income-list", incomeEntries, "income");
+    renderColumn("expense-list", expenseEntries, "expense");
+
+    renderLoans();
   }
 
   // ---- add entry ----
@@ -689,7 +854,7 @@
     syncAction("addFinance", newEntry);
   });
 
-  $("entry-list").addEventListener("click", function(e){
+  function handleRemoveEntry(e){
     var btn = e.target.closest ? e.target.closest(".icon-btn") : null;
     if (!btn) return;
     var id = btn.getAttribute("data-id");
@@ -697,6 +862,79 @@
     saveLocal();
     render();
     syncAction("deleteFinance", { id: id });
+  }
+  $("income-list").addEventListener("click", handleRemoveEntry);
+  $("expense-list").addEventListener("click", handleRemoveEntry);
+
+  // ---- loans ----
+
+  $("add-loan").addEventListener("click", function(){
+    var nameEl = $("loan-name");
+    var totalEl = $("loan-total");
+    var monthlyEl = $("loan-monthly");
+    var name = (nameEl.value || "").trim();
+    if (!name) { nameEl.focus(); return; }
+    var total = Number(totalEl.value);
+    if (!total || total <= 0) { totalEl.focus(); return; }
+    var monthly = Number(monthlyEl.value) || 0;
+
+    var newLoan = {
+      id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      name: name,
+      totalAmount: total,
+      monthlyPlan: monthly,
+      note: ""
+    };
+    state.loans.push(newLoan);
+    nameEl.value = "";
+    totalEl.value = "";
+    monthlyEl.value = "";
+    saveLocal();
+    renderLoans();
+    syncAction("addLoan", newLoan);
+  });
+
+  $("loan-list").addEventListener("click", function(e){
+    var removeLoanBtn = e.target.closest ? e.target.closest("[data-remove-loan]") : null;
+    var logBtn = e.target.closest ? e.target.closest("[data-log-payment]") : null;
+    var removePayBtn = e.target.closest ? e.target.closest("[data-remove-payment]") : null;
+
+    if (removeLoanBtn) {
+      var loanId = removeLoanBtn.getAttribute("data-remove-loan");
+      state.loans = state.loans.filter(function(l){ return l.id !== loanId; });
+      state.loanPayments = state.loanPayments.filter(function(p){ return p.loanId !== loanId; });
+      saveLocal();
+      renderLoans();
+      syncAction("deleteLoan", { id: loanId });
+      return;
+    }
+    if (logBtn) {
+      var lId = logBtn.getAttribute("data-log-payment");
+      var card = logBtn.closest(".loan-card");
+      var amountInput = card.querySelector(".loan-pay-amount");
+      var dateInput = card.querySelector(".loan-pay-date");
+      var amount = Number(amountInput.value);
+      if (!amount || amount <= 0) { amountInput.focus(); return; }
+      var newPayment = {
+        id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+        loanId: lId,
+        date: dateInput.value || todayISO(),
+        amount: amount,
+        note: ""
+      };
+      state.loanPayments.push(newPayment);
+      saveLocal();
+      renderLoans();
+      syncAction("addLoanPayment", newPayment);
+      return;
+    }
+    if (removePayBtn) {
+      var pId = removePayBtn.getAttribute("data-remove-payment");
+      state.loanPayments = state.loanPayments.filter(function(p){ return p.id !== pId; });
+      saveLocal();
+      renderLoans();
+      syncAction("deleteLoanPayment", { id: pId });
+    }
   });
 
   // ---- theme (shared across all pages) ----
