@@ -95,3 +95,18 @@ Anytime a page gains a feature that needs new sheet tabs (Finance, then later Lo
 
 (`doGet` returns an empty array for any tab that doesn't exist yet rather than failing, so pages
 degrade gracefully until you add the tab — but writes for that feature won't persist until you do.)
+
+## Sharing this with someone else
+
+You can hand your friend the same GitHub Pages link — the pages will not silently mix your data
+with theirs. The first time anyone opens `tuition.html` or `finance.html` on a browser that hasn't
+made a choice yet, they'll see a **"Whose tracker is this?"** prompt:
+
+- **This is Dev's copy — continue** picks up the sheet already baked into the page (you).
+- **Connect my own Google Sheet** leaves them fully disconnected until they do steps 1–4 above
+  themselves (their own Sheet, their own Apps Script, their own deployment) and paste their own
+  URL + token into Settings. From then on their browser remembers that choice and never touches
+  your sheet.
+
+Nothing about this needs your involvement beyond sending them the link and this file — each
+person's data stays in their own spreadsheet, under their own Google account.

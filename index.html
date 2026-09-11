@@ -17,6 +17,8 @@
     --rust:#A2432B;
     --grid-line:#1C2B2209;
     --shadow: 0 1px 0 rgba(28,43,34,.06);
+    --ease-out: cubic-bezier(0.23,1,0.32,1);
+    --ease-in-out: cubic-bezier(0.77,0,0.175,1);
   }
   :root[data-theme="dark"]{
     --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E; --track-bg:#2E2A20;
@@ -130,9 +132,12 @@
     text-decoration:none;
     color:var(--slate);
     white-space:nowrap;
+    transition: color 150ms var(--ease-out), background-color 150ms var(--ease-out);
   }
   .page-nav a.active{ background:var(--ink); color:var(--paper); }
-  .page-nav a:hover:not(.active){ color:var(--gold); }
+  @media (hover:hover) and (pointer:fine){
+    .page-nav a:hover:not(.active){ color:var(--gold); }
+  }
   .theme-toggle{
     position:relative;
     width:56px;
@@ -142,6 +147,7 @@
     background:var(--card);
     cursor:pointer;
     padding:0;
+    transition: transform 120ms var(--ease-out);
   }
   .theme-toggle .icon{
     position:absolute;
@@ -169,6 +175,7 @@
   }
   @media (prefers-reduced-motion: no-preference){
     .theme-toggle .knob{ transition:left .25s ease, background .25s ease; }
+    .theme-toggle:active{ transform:scale(.94); }
   }
 
   section{ margin-bottom:2.25rem; }
@@ -209,6 +216,7 @@
   .saved-amount{
     font-size:2.5rem;
     font-weight:700;
+    letter-spacing:-0.01em;
   }
   .saved-amount .of{
     font-size:1.1rem;
@@ -255,7 +263,7 @@
     z-index:3;
   }
   @media (prefers-reduced-motion: no-preference){
-    .track .fill, .track .fill-earned{ transition:width .6s cubic-bezier(.4,0,.2,1); }
+    .track .fill, .track .fill-earned{ transition:width 350ms var(--ease-out); }
   }
   .track-caption{
     font-size:.72rem;
@@ -369,6 +377,7 @@
     font-size:.82rem;
     font-weight:600;
     cursor:pointer;
+    transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
   }
   .status-toggle button.active[data-status="earned"]{ background:var(--gold); color:var(--card); }
   .status-toggle button.active[data-status="received"]{ background:var(--moss); color:var(--card); }
@@ -380,8 +389,16 @@
     padding:.5rem 1rem;
     font-weight:600;
     cursor:pointer;
+    transition: opacity 150ms var(--ease-out);
   }
   .btn:hover{ opacity:.88; }
+  .btn:active{ opacity:.8; }
+  @media (prefers-reduced-motion: no-preference){
+    .btn, .status-toggle button, .icon-btn{ transition-property: opacity, background-color, color, transform; transition-duration: 150ms; transition-timing-function: var(--ease-out); }
+    .btn:active{ transform:scale(.97); }
+    .status-toggle button:active{ transform:scale(.96); }
+    .icon-btn:active{ transform:scale(.94); }
+  }
 
   .ledger{
     border-top:1px solid var(--ink);
@@ -487,7 +504,9 @@
     margin-bottom:.5rem;
   }
   .price-card .retailer a{ color:var(--ink); text-decoration:none; font-weight:700; font-size:.95rem; }
-  .price-card .retailer a:hover{ text-decoration:underline; }
+  @media (hover:hover) and (pointer:fine){
+    .price-card .retailer a:hover{ text-decoration:underline; }
+  }
   .badge{
     font-size:.65rem;
     text-transform:uppercase;

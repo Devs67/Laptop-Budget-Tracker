@@ -18,6 +18,8 @@
     --rust-soft:#A2432B26;
     --grid-line:#1C2B2209;
     --shadow: 0 1px 0 rgba(28,43,34,.06);
+    --ease-out: cubic-bezier(0.23,1,0.32,1);
+    --ease-in-out: cubic-bezier(0.77,0,0.175,1);
   }
   :root[data-theme="dark"]{
     --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E; --track-bg:#2E2A20;
@@ -104,9 +106,12 @@
     text-decoration:none;
     color:var(--slate);
     white-space:nowrap;
+    transition: color 150ms var(--ease-out), background-color 150ms var(--ease-out);
   }
   .page-nav a.active{ background:var(--ink); color:var(--paper); }
-  .page-nav a:hover:not(.active){ color:var(--gold); }
+  @media (hover:hover) and (pointer:fine){
+    .page-nav a:hover:not(.active){ color:var(--gold); }
+  }
   .theme-toggle{
     position:relative;
     width:52px;
@@ -117,6 +122,7 @@
     background:var(--card);
     cursor:pointer;
     padding:0;
+    transition: transform 120ms var(--ease-out);
   }
   .theme-toggle .icon{
     position:absolute;
@@ -141,6 +147,7 @@
   :root[data-theme="dark"] .theme-toggle .knob{ left:26px; background:var(--gold); }
   @media (prefers-reduced-motion: no-preference){
     .theme-toggle .knob{ transition:left .25s ease, background .25s ease; }
+    .theme-toggle:active{ transform:scale(.94); }
   }
 
   section{ margin-bottom:1.6rem; }
@@ -173,6 +180,7 @@
     font-size:1.15rem;
     font-weight:700;
     word-break:break-word;
+    letter-spacing:-0.01em;
   }
   @media (min-width:400px){ .summary-grid .stat .v{ font-size:1.35rem; } }
   .summary-grid .stat .v.income{ color:var(--moss); }
@@ -210,6 +218,7 @@
     font-size:.92rem;
     font-weight:700;
     cursor:pointer;
+    transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
   }
   .type-toggle button.active[data-type="income"]{ background:var(--moss); color:#fff; }
   .type-toggle button.active[data-type="expense"]{ background:var(--rust); color:#fff; }
@@ -244,6 +253,7 @@
     font-size:1.5rem;
     font-weight:700;
     padding:.6rem .8rem;
+    letter-spacing:-0.01em;
   }
   input:focus-visible, select:focus-visible, .btn:focus-visible, .icon-btn:focus-visible, .type-toggle button:focus-visible, .page-nav a:focus-visible{
     outline:2px solid var(--gold);
@@ -259,9 +269,18 @@
     font-size:1rem;
     cursor:pointer;
     width:100%;
+    transition: opacity 150ms var(--ease-out);
   }
   .btn:hover{ opacity:.9; }
+  .btn:active{ opacity:.82; }
   .btn.small{ width:auto; padding:.5rem .9rem; font-size:.85rem; border-radius:8px; }
+  .btn.ghost{ background:none; color:var(--ink); border:1px solid var(--rule); }
+  @media (prefers-reduced-motion: no-preference){
+    .btn, .icon-btn, .type-toggle button{ transition-property: opacity, background-color, color, transform; transition-duration: 150ms; transition-timing-function: var(--ease-out); }
+    .btn:active{ transform:scale(.97); }
+    .icon-btn:active{ transform:scale(.94); }
+    .type-toggle button:active{ transform:scale(.97); }
+  }
 
   /* ---- two-column income/expense ---- */
   .two-col{ display:flex; flex-direction:column; gap:1.4rem; }
@@ -333,7 +352,9 @@
     padding:.3rem;
     min-height:32px;
   }
-  .icon-btn:hover{ text-decoration:underline; }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ text-decoration:underline; }
+  }
   .empty{
     padding:1.2rem 0;
     color:var(--slate);
@@ -349,6 +370,9 @@
   .loan-sub{ font-size:.78rem; color:var(--slate); margin-top:.1rem; }
   .loan-track{ height:10px; border-radius:99px; background:var(--track-bg); overflow:hidden; margin-bottom:.4rem; }
   .loan-track .fill{ height:100%; background:var(--moss); border-radius:99px; }
+  @media (prefers-reduced-motion: no-preference){
+    .loan-track .fill{ transition: width 350ms var(--ease-out); }
+  }
   .loan-figures{ display:flex; justify-content:space-between; gap:.6rem; font-size:.78rem; color:var(--slate); margin-bottom:1rem; flex-wrap:wrap; }
   .loan-figures strong{ color:var(--ink); font-weight:700; }
   .loan-pay-form{ display:flex; flex-direction:column; gap:.5rem; margin-bottom:.8rem; }
@@ -361,6 +385,32 @@
   .loan-payments{ border-top:1px dashed var(--rule); padding-top:.6rem; font-size:.78rem; color:var(--slate); }
   .loan-payments .lp-row{ display:flex; justify-content:space-between; align-items:center; gap:.5rem; padding:.3rem 0; }
   .loan-payments .lp-amount{ color:var(--ink); font-weight:600; }
+
+  .gate-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(20,20,15,.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:1.5rem;
+    z-index:60;
+  }
+  .gate-overlay[hidden]{ display:none; }
+  .gate-card{
+    background:var(--card);
+    color:var(--ink);
+    border:1px solid var(--rule);
+    border-radius:14px;
+    padding:1.6rem 1.6rem 1.4rem;
+    max-width:420px;
+    width:100%;
+    box-shadow:0 12px 40px rgba(0,0,0,.3);
+  }
+  .gate-card h2{ margin:.2rem 0 .6rem; font-size:1.15rem; font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+  .gate-card p{ font-size:.85rem; color:var(--slate); margin:0 0 1.2rem; }
+  .gate-card .btn{ margin-bottom:.6rem; }
+  .gate-card .btn:last-child{ margin-bottom:0; }
 
   .sync-status{ font-size:.78rem; text-align:center; margin-top:.6rem; }
   .sync-status.ok{ color:var(--moss); }
@@ -515,6 +565,16 @@
   </div>
 </div>
 
+<div class="gate-overlay" id="gate-overlay" hidden>
+  <div class="gate-card">
+    <div class="eyebrow">Welcome</div>
+    <h2>Whose tracker is this?</h2>
+    <p>This page can stay connected to the Google Sheet already set up here, or you can connect your own so your income, expenses, and loans stay completely separate.</p>
+    <button type="button" class="btn" id="gate-own">Connect my own Google Sheet</button>
+    <button type="button" class="btn ghost" id="gate-default">This is Dev's copy &mdash; continue</button>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -523,6 +583,7 @@
   var THEME_KEY = "gb5tracker.theme";
   var SHEET_URL_KEY = "gb5tuition.sheetUrl";
   var SHEET_TOKEN_KEY = "gb5tuition.sheetToken";
+  var SETUP_CHOICE_KEY = "gb5tracker.setupChoice";
   var RUPEE = "₹";
 
   // Same deployment as the Tuition page, so Finances connects automatically too.
@@ -579,14 +640,23 @@
 
   // ---- Google Sheet sync (shared with the Tuition page) ----
 
+  function setupChoice(){
+    try { return localStorage.getItem(SETUP_CHOICE_KEY) || ""; } catch (e) { return ""; }
+  }
+
   function getSheetConfig(){
     var url = "", token = "";
     try {
       url = localStorage.getItem(SHEET_URL_KEY) || "";
       token = localStorage.getItem(SHEET_TOKEN_KEY) || "";
     } catch (e) { /* storage unavailable */ }
-    if (!url) url = DEFAULT_SHEET_URL;
-    if (!token) token = DEFAULT_SHEET_TOKEN;
+    // Only fall back to the baked-in default sheet if this device hasn't
+    // explicitly chosen to run its own — otherwise a friend using this same
+    // page would silently read and write the original owner's data.
+    if (setupChoice() !== "own") {
+      if (!url) url = DEFAULT_SHEET_URL;
+      if (!token) token = DEFAULT_SHEET_TOKEN;
+    }
     return { url: url, token: token };
   }
 
@@ -959,11 +1029,29 @@
     try { localStorage.setItem(THEME_KEY, currentTheme); } catch (e) { /* storage unavailable */ }
   });
 
+  // ---- first-visit gate: prevents a friend on this same page from silently
+  // connecting to the original owner's sheet before making a real choice ----
+
+  $("gate-default").addEventListener("click", function(){
+    try { localStorage.setItem(SETUP_CHOICE_KEY, "default"); } catch (e) { /* storage unavailable */ }
+    $("gate-overlay").hidden = true;
+    if (sheetConfigured()) pullFromSheet(); else setSyncStatus("Not connected — saving to this browser only.", "warn");
+  });
+
+  $("gate-own").addEventListener("click", function(){
+    try { localStorage.setItem(SETUP_CHOICE_KEY, "own"); } catch (e) { /* storage unavailable */ }
+    window.location.href = "tuition.html#sync-card";
+  });
+
   // ---- init ----
 
   loadLocal();
   $("entry-date").value = todayISO();
   render();
-  if (sheetConfigured()) pullFromSheet(); else setSyncStatus("Not connected — saving to this browser only.", "warn");
+  if (setupChoice()) {
+    if (sheetConfigured()) pullFromSheet(); else setSyncStatus("Not connected — saving to this browser only.", "warn");
+  } else {
+    $("gate-overlay").hidden = false;
+  }
 })();
 </script>
