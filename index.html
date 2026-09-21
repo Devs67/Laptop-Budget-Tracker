@@ -400,6 +400,20 @@
     .icon-btn:active{ transform:scale(.94); }
   }
 
+  .month-bar{
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+    margin-bottom:.8rem;
+  }
+  .month-bar label{
+    font-size:.72rem;
+    color:var(--slate);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .month-bar select{ width:auto; min-width:11rem; }
+
   .ledger{
     border-top:1px solid var(--ink);
   }
@@ -674,6 +688,10 @@
       </label>
       <button class="btn" id="add-entry">Add entry</button>
     </div>
+    <div class="month-bar">
+      <label for="month-select">Month</label>
+      <select id="month-select"></select>
+    </div>
     <div class="ledger" id="ledger-body">
       <div class="empty">No entries yet &mdash; log your first one above.</div>
     </div>
@@ -876,6 +894,31 @@
     return div.innerHTML;
   }
 
+  var viewMonth = todayISO().slice(0, 7);
+
+  function monthLabel(ym){
+    var d = new Date(ym + "-01T00:00:00");
+    if (isNaN(d.getTime())) return ym;
+    return d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  }
+
+  function renderMonthSelect(){
+    var select = $("month-select");
+    var seen = {};
+    seen[todayISO().slice(0, 7)] = true;
+    seen[viewMonth] = true;
+    state.entries.forEach(function(e){ seen[e.date.slice(0, 7)] = true; });
+    var months = Object.keys(seen).sort().reverse();
+    select.innerHTML = "";
+    months.forEach(function(ym){
+      var opt = document.createElement("option");
+      opt.value = ym;
+      opt.textContent = monthLabel(ym);
+      select.appendChild(opt);
+    });
+    select.value = viewMonth;
+  }
+
   function render(){
     var targetEl = $("target-input");
     var dateEl = $("target-date-input");
@@ -918,7 +961,18 @@
     $("per-day").textContent = remaining > 0 ? fmt(perDay) : "—";
     $("per-week").textContent = remaining > 0 ? fmt(perWeek) : "—";
 
-    var count = state.entries.length;
+    renderMonthSelect();
+    var monthEntries = state.entries.filter(function(e){ return e.date.slice(0, 7) === viewMonth; });
+    var monthReceived = 0;
+    var monthEarned = 0;
+    monthEntries.forEach(function(e){
+      var amt = Number(e.amount) || 0;
+      monthEarned += amt;
+      if (e.status === "received") monthReceived += amt;
+    });
+    var monthOutstanding = monthEarned - monthReceived;
+
+    var count = monthEntries.length;
     $("entry-count").textContent = count ? "(" + count + " " + (count === 1 ? "entry" : "entries") + ")" : "";
 
     var ledgerBody = $("ledger-body");
@@ -926,10 +980,12 @@
     if (!count) {
       var empty = document.createElement("div");
       empty.className = "empty";
-      empty.textContent = "No entries yet — log your first one above.";
+      empty.textContent = state.entries.length
+        ? "No entries in " + monthLabel(viewMonth) + "."
+        : "No entries yet — log your first one above.";
       ledgerBody.appendChild(empty);
     } else {
-      var sorted = state.entries.slice().sort(function(a, b){ return b.date.localeCompare(a.date); });
+      var sorted = monthEntries.slice().sort(function(a, b){ return b.date.localeCompare(a.date); });
       sorted.forEach(function(entry){
         var row = document.createElement("div");
         row.className = "row";
@@ -948,9 +1004,9 @@
       var summaryRow = document.createElement("div");
       summaryRow.className = "summary-row";
       summaryRow.innerHTML =
-        '<div class="label">Received (counts toward saved)</div><div class="val received">' + fmt(saved) + '</div>' +
-        '<div class="label">Earned, not yet received</div><div class="val outstanding">' + fmt(outstanding) + '</div>' +
-        '<div class="label">Total earned</div><div class="val">' + fmt(earned) + '</div>';
+        '<div class="label">Received in ' + monthLabel(viewMonth) + '</div><div class="val received">' + fmt(monthReceived) + '</div>' +
+        '<div class="label">Earned, not yet received</div><div class="val outstanding">' + fmt(monthOutstanding) + '</div>' +
+        '<div class="label">Total earned</div><div class="val">' + fmt(monthEarned) + '</div>';
       ledgerBody.appendChild(summaryRow);
     }
 
@@ -1029,9 +1085,15 @@
       amount: amount,
       status: pendingStatus
     });
+    viewMonth = date.slice(0, 7);
     amountEl.value = "";
     sourceEl.value = "";
     persistState();
+    render();
+  });
+
+  $("month-select").addEventListener("change", function(){
+    viewMonth = this.value;
     render();
   });
 
