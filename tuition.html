@@ -1120,12 +1120,19 @@
       return;
     }
     var totals = childTotals(child.id);
-    var sorted = totals.sessions.slice().sort(function(a, b){ return (b.date + b.time).localeCompare(a.date + a.time); });
     var calResult = buildCalendarGrid(datesSetFromSessions(totals.sessions), studentCalOffset);
+    var calBase = new Date();
+    var calMonthDate = new Date(calBase.getFullYear(), calBase.getMonth() + studentCalOffset, 1);
+    var calMonthKey = calMonthDate.getFullYear() + "-" + pad2(calMonthDate.getMonth() + 1);
+    var sorted = totals.sessions
+      .filter(function(e){ return e.date.slice(0, 7) === calMonthKey; })
+      .sort(function(a, b){ return (b.date + b.time).localeCompare(a.date + a.time); });
 
     var rowsHtml = "";
     if (!sorted.length) {
-      rowsHtml = '<div class="empty">No sessions logged for ' + escapeHtml(child.name) + ' yet.</div>';
+      rowsHtml = totals.sessions.length
+        ? '<div class="empty">No sessions in ' + calResult.label + '.</div>'
+        : '<div class="empty">No sessions logged for ' + escapeHtml(child.name) + ' yet.</div>';
     } else {
       sorted.forEach(function(entry){
         rowsHtml +=
