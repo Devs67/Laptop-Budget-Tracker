@@ -1194,9 +1194,13 @@
   }
 
   function renderWeekSummary(){
+    var base = new Date();
+    var monthDate = new Date(base.getFullYear(), base.getMonth() + allCalOffset, 1);
+    var monthKey = monthDate.getFullYear() + "-" + pad2(monthDate.getMonth() + 1);
+
     var weeks = {};
     state.entries.forEach(function(entry){
-      if (!entry.date) return;
+      if (!entry.date || entry.date.slice(0, 7) !== monthKey) return;
       var mon = mondayOf(entry.date);
       var key = isoFromDate(mon);
       if (!weeks[key]) weeks[key] = { mondayDate: mon, sessions: [], billed: 0, paid: 0 };
@@ -1210,7 +1214,7 @@
     var list = $("week-list");
     list.innerHTML = "";
     if (!keys.length) {
-      list.innerHTML = '<div class="empty">No sessions logged yet.</div>';
+      list.innerHTML = '<div class="empty">No sessions logged in ' + MONTH_NAMES[monthDate.getMonth()] + " " + monthDate.getFullYear() + '.</div>';
       return;
     }
     keys.forEach(function(key){
@@ -1288,8 +1292,8 @@
     render();
   });
 
-  $("cal-all-prev").addEventListener("click", function(){ allCalOffset--; renderAllCalendar(); });
-  $("cal-all-next").addEventListener("click", function(){ allCalOffset++; renderAllCalendar(); });
+  $("cal-all-prev").addEventListener("click", function(){ allCalOffset--; renderAllCalendar(); renderWeekSummary(); });
+  $("cal-all-next").addEventListener("click", function(){ allCalOffset++; renderAllCalendar(); renderWeekSummary(); });
 
   $("student-detail").addEventListener("input", function(e){
     if (e.target.id !== "detail-rate") return;
