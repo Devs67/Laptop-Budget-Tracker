@@ -894,6 +894,19 @@
   var pad2 = function(n){ return n < 10 ? "0" + n : "" + n; };
   var MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
+  function monthDateFor(offset){
+    var base = new Date();
+    return new Date(base.getFullYear(), base.getMonth() + offset, 1);
+  }
+  function monthKeyFor(offset){
+    var d = monthDateFor(offset);
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1);
+  }
+  function monthLabelFor(offset){
+    var d = monthDateFor(offset);
+    return MONTH_NAMES[d.getMonth()] + " " + d.getFullYear();
+  }
+
   function datesSetFromSessions(sessions){
     var set = {};
     sessions.forEach(function(s){ if (s.date) set[s.date] = true; });
@@ -1121,9 +1134,7 @@
     }
     var totals = childTotals(child.id);
     var calResult = buildCalendarGrid(datesSetFromSessions(totals.sessions), studentCalOffset);
-    var calBase = new Date();
-    var calMonthDate = new Date(calBase.getFullYear(), calBase.getMonth() + studentCalOffset, 1);
-    var calMonthKey = calMonthDate.getFullYear() + "-" + pad2(calMonthDate.getMonth() + 1);
+    var calMonthKey = monthKeyFor(studentCalOffset);
     var sorted = totals.sessions
       .filter(function(e){ return e.date.slice(0, 7) === calMonthKey; })
       .sort(function(a, b){ return (b.date + b.time).localeCompare(a.date + a.time); });
@@ -1194,9 +1205,7 @@
   }
 
   function renderWeekSummary(){
-    var base = new Date();
-    var monthDate = new Date(base.getFullYear(), base.getMonth() + allCalOffset, 1);
-    var monthKey = monthDate.getFullYear() + "-" + pad2(monthDate.getMonth() + 1);
+    var monthKey = monthKeyFor(allCalOffset);
 
     var weeks = {};
     state.entries.forEach(function(entry){
@@ -1214,7 +1223,7 @@
     var list = $("week-list");
     list.innerHTML = "";
     if (!keys.length) {
-      list.innerHTML = '<div class="empty">No sessions logged in ' + MONTH_NAMES[monthDate.getMonth()] + " " + monthDate.getFullYear() + '.</div>';
+      list.innerHTML = '<div class="empty">No sessions logged in ' + monthLabelFor(allCalOffset) + '.</div>';
       return;
     }
     keys.forEach(function(key){
@@ -1242,17 +1251,22 @@
     renderAllCalendar();
     renderWeekSummary();
 
+    var monthKey = monthKeyFor(allCalOffset);
     var grand = { count: 0, billed: 0, paid: 0, owed: 0 };
-    state.children.forEach(function(child){
-      var t = childTotals(child.id);
-      grand.count += t.count;
-      grand.billed += t.billed;
-      grand.paid += t.paid;
-      grand.owed += t.owed;
+    var studentIds = {};
+    state.entries.forEach(function(entry){
+      if (!entry.date || entry.date.slice(0, 7) !== monthKey) return;
+      grand.count++;
+      grand.billed += Number(entry.amount) || 0;
+      if (entry.paid) grand.paid += Number(entry.amount) || 0;
+      studentIds[entry.childId] = true;
     });
+    grand.owed = grand.billed - grand.paid;
+    var studentCount = Object.keys(studentIds).length;
     $("grand-total-line").innerHTML =
       grand.count + " " + (grand.count === 1 ? "session" : "sessions") + " logged across " +
-      state.children.length + " " + (state.children.length === 1 ? "student" : "students") +
+      studentCount + " " + (studentCount === 1 ? "student" : "students") +
+      " in " + monthLabelFor(allCalOffset) +
       " &middot; " + fmt(grand.billed) + " billed &middot; " + fmt(grand.paid) + " paid &middot; <strong>" + fmt(grand.owed) + " owed</strong>";
   }
 
