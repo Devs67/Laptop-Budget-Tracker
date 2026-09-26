@@ -125,16 +125,44 @@ var PaisaAuth = (function () {
     return label;
   }
 
+  var REGISTER_ERRORS = {
+    "signup disabled": "Sign-up isn't turned on yet. The sheet owner needs to set an invite code.",
+    "bad invite": "That invite code isn't right.",
+    "too many attempts": "Too many wrong attempts. Try again in 15 minutes.",
+    "username taken": "That username is already taken. Pick another.",
+    "invalid username": "Use 3-30 letters, numbers, dots, dashes or underscores.",
+    "key too short": "Your key must be at least 6 characters.",
+    "unauthorized": "The sheet rejected this page's sync token.",
+    "busy, try again": "The sheet is busy. Try again in a moment."
+  };
+
+  function register(user, key, invite) {
+    var cfg = sheetConfig();
+    if (!cfg.url || !cfg.token) return Promise.resolve({ ok: false, message: "No sheet is connected." });
+    return fetch(cfg.url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ token: cfg.token, action: "register", user: user, key: key, payload: { invite: invite } })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data && data.ok && data.auth === true) return { ok: true };
+      if (data && data.ok) return { ok: false, message: "The sync script is out of date and can't create accounts yet." };
+      var msg = data && REGISTER_ERRORS[data.error];
+      return { ok: false, message: msg || "Couldn't create the account" + (data && data.error ? " (" + data.error + ")" : "") + "." };
+    }).catch(function () {
+      return { ok: false, message: "Couldn't reach the sheet. Check your connection and try again." };
+    });
+  }
+
   function showSignIn() {
     applySavedTheme();
 
+    var creating = false;
     var overlay = el("div", "auth-overlay");
     var form = el("form", "auth-card");
     form.setAttribute("novalidate", "");
 
-    form.appendChild(el("span", "eyebrow", "Welcome"));
-    form.appendChild(el("h2", "", "Sign in to Tutor track"));
-    form.appendChild(el("p", "", "Enter your username and key. You'll stay signed in on this device until you press Sign out."));
+    var heading = el("h2");
+    var intro = el("p");
 
     var userInput = el("input");
     userInput.type = "text";
@@ -147,46 +175,97 @@ var PaisaAuth = (function () {
     var keyInput = el("input");
     keyInput.type = "password";
     keyInput.name = "key";
-    keyInput.autocomplete = "current-password";
     keyInput.placeholder = "Key";
+
+    var inviteInput = el("input");
+    inviteInput.type = "text";
+    inviteInput.name = "invite";
+    inviteInput.autocomplete = "off";
+    inviteInput.autocapitalize = "none";
+    inviteInput.spellcheck = false;
+    inviteInput.placeholder = "Invite code";
+    var inviteField = field("Invite code", inviteInput);
 
     var note = "";
     try { note = sessionStorage.getItem(NOTE_KEY) || ""; sessionStorage.removeItem(NOTE_KEY); } catch (e) { /* ignore */ }
     var error = el("div", "auth-error", note);
     error.setAttribute("role", "alert");
 
-    var submit = el("button", "btn", "Sign in");
+    var submit = el("button", "btn");
     submit.type = "submit";
 
+    var toggle = el("button", "auth-switch");
+    toggle.type = "button";
+
+    function setMode(makeAccount) {
+      creating = makeAccount;
+      heading.textContent = creating ? "Create your Tutor track account" : "Sign in to Tutor track";
+      intro.textContent = creating
+        ? "Choose a username and a key (6+ characters). You'll need the invite code from the person who runs this sheet."
+        : "Enter your username and key. You'll stay signed in on this device until you press Sign out.";
+      keyInput.autocomplete = creating ? "new-password" : "current-password";
+      inviteField.hidden = !creating;
+      submit.textContent = creating ? "Create account" : "Sign in";
+      toggle.textContent = creating ? "Already have an account? Sign in" : "New here? Create an account";
+      error.textContent = "";
+    }
+
+    form.appendChild(el("span", "eyebrow", "Welcome"));
+    form.appendChild(heading);
+    form.appendChild(intro);
     form.appendChild(field("Username", userInput));
     form.appendChild(field("Key", keyInput));
+    form.appendChild(inviteField);
     form.appendChild(error);
     form.appendChild(submit);
+    form.appendChild(toggle);
     overlay.appendChild(form);
     document.body.appendChild(overlay);
+    setMode(false);
+    if (note) error.textContent = note;
     userInput.focus();
+
+    toggle.addEventListener("click", function () { setMode(!creating); });
+
+    function finish(user, key) {
+      write(AUTH_KEY, JSON.stringify({ user: user, key: key }));
+      location.reload();
+    }
+
+    function fail(message) {
+      error.textContent = message;
+      submit.disabled = false;
+      submit.textContent = creating ? "Create account" : "Sign in";
+    }
 
     form.addEventListener("submit", function (ev) {
       ev.preventDefault();
       var user = userInput.value.trim().toLowerCase();
       var key = keyInput.value;
-      if (!user || !key) {
-        error.textContent = "Enter both your username and key.";
+      var invite = inviteInput.value.trim();
+      if (!user || !key || (creating && !invite)) {
+        error.textContent = creating ? "Fill in your username, a key and the invite code." : "Enter both your username and key.";
         return;
       }
       error.textContent = "";
       submit.disabled = true;
-      submit.textContent = "Checking...";
-      verify(user, key).then(function (res) {
-        if (res.ok) {
-          write(AUTH_KEY, JSON.stringify({ user: user, key: key }));
-          location.reload();
-          return;
-        }
-        error.textContent = res.message;
-        submit.disabled = false;
-        submit.textContent = "Sign in";
-        keyInput.select();
+      submit.textContent = creating ? "Creating..." : "Checking...";
+
+      if (!creating) {
+        verify(user, key).then(function (res) {
+          if (res.ok) { finish(user, key); return; }
+          fail(res.message);
+          keyInput.select();
+        });
+        return;
+      }
+
+      register(user, key, invite).then(function (made) {
+        if (!made.ok) { fail(made.message); return; }
+        // Confirm the new login works, then stay signed in.
+        verify(user, key).then(function (res) {
+          if (res.ok) finish(user, key); else fail(res.message);
+        });
       });
     });
   }

@@ -363,7 +363,24 @@ body{
   font-size:.8rem;
   color:var(--rust);
 }
+.auth-field[hidden]{ display:none; }
 .auth-card .btn{ width:100%; padding:.7rem 1rem; font-size:.9rem; }
+.auth-switch{
+  display:block;
+  width:100%;
+  margin-top:.9rem;
+  padding:.25rem;
+  background:none;
+  border:none;
+  color:var(--slate);
+  font:inherit;
+  font-size:.8rem;
+  font-weight:600;
+  cursor:pointer;
+}
+@media (hover:hover) and (pointer:fine){
+  .auth-switch:hover{ color:var(--ink); text-decoration:underline; }
+}
 
 /* ---------- page heading ---------- */
 

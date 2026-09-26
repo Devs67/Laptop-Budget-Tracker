@@ -10,6 +10,11 @@
 // belong to this person.
 var OWNER_USER = "dev";
 
+// People create their own account on the sign-in screen, but only with this
+// code, so a stranger who finds the site can't sign up. Set it to something
+// only you and your friends know. While it is "change-me", sign-up is off.
+var INVITE_CODE = "change-me";
+
 var STUDENTS_SHEET = "Students";
 var SESSIONS_SHEET = "Sessions";
 var FINANCE_SHEET = "Finance";
@@ -48,6 +53,42 @@ function createOrResetUser() {
   }
   sheet.appendRow([user, hash]);
   Logger.log("Created user: " + user);
+}
+
+/** Sign-up from the sign-in screen: needs the invite code, creates the login. */
+function register_(body) {
+  if (!INVITE_CODE || INVITE_CODE === "change-me") return jsonOut_({ ok: false, error: "signup disabled" });
+
+  var cache = CacheService.getScriptCache();
+  var fails = Number(cache.get("fail:invite") || 0);
+  if (fails >= MAX_FAILED_LOGINS) return jsonOut_({ ok: false, error: "too many attempts" });
+  if (String((body.payload && body.payload.invite) || "") !== INVITE_CODE) {
+    cache.put("fail:invite", String(fails + 1), LOCKOUT_SECONDS);
+    return jsonOut_({ ok: false, error: "bad invite" });
+  }
+
+  var user = normUser_(body.user);
+  var key = String(body.key || "");
+  if (!/^[a-z0-9][a-z0-9_.-]{2,29}$/.test(user)) return jsonOut_({ ok: false, error: "invalid username" });
+  if (key.length < 6) return jsonOut_({ ok: false, error: "key too short" });
+
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+  } catch (lockErr) {
+    return jsonOut_({ ok: false, error: "busy, try again" });
+  }
+  try {
+    var sheet = getUsersSheet_();
+    var values = sheet.getDataRange().getValues();
+    for (var i = 1; i < values.length; i++) {
+      if (normUser_(values[i][0]) === user) return jsonOut_({ ok: false, error: "username taken" });
+    }
+    sheet.appendRow([user, hashKey_(user, key)]);
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonOut_({ ok: true });
 }
 
 function getToken_() {
@@ -214,6 +255,7 @@ function doPost(e) {
     return jsonOut_({ ok: false, error: "bad json" });
   }
   if (!checkToken_(body.token)) return jsonOut_({ ok: false, error: "unauthorized" });
+  if (body.action === "register") return register_(body);
   var login = checkLogin_(body.user, body.key);
   if (!login.ok) return jsonOut_({ ok: false, error: login.error });
   var user = login.user;
