@@ -317,31 +317,6 @@
   }
   .overlay[hidden]{ display:none; }
 
-  .gate-overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(20,20,15,.55);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:1.5rem;
-    z-index:60;
-  }
-  .gate-overlay[hidden]{ display:none; }
-  .gate-card{
-    background:var(--card);
-    color:var(--ink);
-    border:1px solid var(--rule);
-    border-radius:14px;
-    padding:1.6rem 1.6rem 1.4rem;
-    max-width:420px;
-    width:100%;
-    box-shadow:0 12px 40px rgba(0,0,0,.3);
-  }
-  .gate-card h2{ margin:.2rem 0 .6rem; font-size:1.15rem; font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
-  .gate-card p{ font-size:.85rem; color:var(--slate); margin:0 0 1.2rem; }
-  .gate-card .btn{ width:100%; margin-bottom:.6rem; }
-  .gate-card .btn:last-child{ margin-bottom:0; }
   #invoice-panel{
     background:#FFFFFF;
     color:#1C2B22;
@@ -423,7 +398,7 @@
         <span class="brand-mark" aria-hidden="true">&#8377;</span>
         <span>
           <span class="brand-name">
-            <strong>PaisaLedger</strong>
+            <strong>Tutor track</strong>
             <span class="brand-chip">&#8377; INR</span>
           </span>
           <p class="brand-sub">Tuition Logger &middot; Finance Tracker</p>
@@ -554,16 +529,6 @@
   </div>
 </div>
 
-<div class="gate-overlay" id="gate-overlay" hidden>
-  <div class="gate-card">
-    <div class="eyebrow">Welcome</div>
-    <h2>Whose tracker is this?</h2>
-    <p>This page can stay connected to the Google Sheet already set up here, or you can connect your own so your students, sessions, and finances stay completely separate.</p>
-    <button type="button" class="btn" id="gate-own">Connect my own Google Sheet</button>
-    <button type="button" class="btn ghost" id="gate-default">This is Dev's copy &mdash; continue</button>
-  </div>
-</div>
-
 <div class="overlay" id="invoice-overlay" hidden>
   <div id="invoice-panel">
     <div class="invoice-head">
@@ -600,30 +565,20 @@
   </div>
 </div>
 
+<script src="auth.js"></script>
 <script>
 (function(){
   "use strict";
 
-  var LS_KEY = "gb5tuition.v1";
-  var THEME_KEY = "gb5tracker.theme";
-  var SHEET_URL_KEY = "gb5tuition.sheetUrl";
-  var SHEET_TOKEN_KEY = "gb5tuition.sheetToken";
-  var SETUP_CHOICE_KEY = "gb5tracker.setupChoice";
-  var RUPEE = "₹";
+  if (!PaisaAuth.mount()) return;
 
-  // Pre-filled so the page auto-connects on any device with no manual setup.
-  // Baked into this file — if this repo/page is ever made public, rotate the
-  // token (re-run `setup` in Apps Script) and redeploy, since anyone who can
-  // read this source can read it too.
-  var DEFAULT_SHEET_URL = "https://script.google.com/macros/s/AKfycbzxe6u5_Y3zif8VihQEoYx0olkSEJizirWP_3AK-BOpjpgAuPcM5RyPREsKOG9FwRow1w/exec";
-  var DEFAULT_SHEET_TOKEN = "77978f86-1f84-491b-b2ec-1b7e864edca8";
+  var LS_KEY = PaisaAuth.scopedKey("gb5tuition.v1");
+  var THEME_KEY = "gb5tracker.theme";
+  var RUPEE = "₹";
 
   var DEFAULT_STATE = {
     invoiceFrom: "",
-    children: [
-      { id: "rayan", name: "Rayan", rate: 1500 },
-      { id: "adhira", name: "Adhira", rate: 1200 }
-    ],
+    children: [],
     entries: []
   };
 
@@ -792,32 +747,8 @@
 
   // ---- Google Sheet sync ----
 
-  function setupChoice(){
-    try { return localStorage.getItem(SETUP_CHOICE_KEY) || ""; } catch (e) { return ""; }
-  }
-
-  function getSheetConfig(){
-    var url = "", token = "";
-    try {
-      url = localStorage.getItem(SHEET_URL_KEY) || "";
-      token = localStorage.getItem(SHEET_TOKEN_KEY) || "";
-    } catch (e) { /* storage unavailable */ }
-    // Only fall back to the baked-in default sheet if this device hasn't
-    // explicitly chosen to run its own — otherwise a friend using this same
-    // page would silently read and write the original owner's data.
-    if (setupChoice() !== "own") {
-      if (!url) url = DEFAULT_SHEET_URL;
-      if (!token) token = DEFAULT_SHEET_TOKEN;
-    }
-    return { url: url, token: token };
-  }
-
-  function saveSheetConfig(url, token){
-    try {
-      localStorage.setItem(SHEET_URL_KEY, url);
-      localStorage.setItem(SHEET_TOKEN_KEY, token);
-    } catch (e) { /* storage unavailable */ }
-  }
+  var getSheetConfig = PaisaAuth.sheetConfig;
+  var saveSheetConfig = PaisaAuth.saveSheetConfig;
 
   function sheetConfigured(){
     var cfg = getSheetConfig();
@@ -833,7 +764,9 @@
 
   function sheetGet(){
     var cfg = getSheetConfig();
-    var url = cfg.url + (cfg.url.indexOf("?") === -1 ? "?" : "&") + "token=" + encodeURIComponent(cfg.token);
+    var who = PaisaAuth.session();
+    var url = cfg.url + (cfg.url.indexOf("?") === -1 ? "?" : "&") + "token=" + encodeURIComponent(cfg.token) +
+      "&user=" + encodeURIComponent(who.user) + "&key=" + encodeURIComponent(who.key);
     return fetch(url).then(function(r){ return r.json(); });
   }
 
@@ -842,7 +775,7 @@
     return fetch(cfg.url, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ token: cfg.token, action: action, payload: payload })
+      body: JSON.stringify({ token: cfg.token, user: PaisaAuth.session().user, key: PaisaAuth.session().key, action: action, payload: payload })
     }).then(function(r){ return r.json(); });
   }
 
@@ -850,6 +783,7 @@
     if (!sheetConfigured()) return;
     setSyncStatus("Syncing…", "busy");
     sheetPost(action, payload).then(function(res){
+      if (PaisaAuth.rejected(res)) return;
       if (res && res.ok) {
         setSyncStatus("Synced just now.", "ok");
       } else {
@@ -867,11 +801,16 @@
     }
     setSyncStatus("Syncing…", "busy");
     sheetGet().then(function(data){
+      if (PaisaAuth.rejected(data)) return;
+      if (data && data.ok && data.auth !== true) {
+        setSyncStatus("The sync script is out of date and can't separate users yet — showing local data.", "error");
+        return;
+      }
       if (!data || !data.ok) {
         setSyncStatus("Sync failed (" + ((data && data.error) || "network error") + ") — showing local data.", "error");
         return;
       }
-      if (Array.isArray(data.students) && data.students.length) {
+      if (Array.isArray(data.students)) {
         state.children = data.students.map(function(s){
           return { id: String(s.id), name: String(s.name), rate: Number(s.rate) || 0 };
         });
@@ -1345,28 +1284,7 @@
     var token = ($("sheet-token").value || "").trim();
     if (!url || !token) { setSyncStatus("Enter both the Web App URL and the token.", "error"); return; }
     saveSheetConfig(url, token);
-    try { localStorage.setItem(SETUP_CHOICE_KEY, "own"); } catch (e) { /* storage unavailable */ }
     pullFromSheet();
-  });
-
-  // ---- first-visit gate: prevents a friend on this same page from silently
-  // connecting to the original owner's sheet before making a real choice ----
-
-  $("gate-default").addEventListener("click", function(){
-    try { localStorage.setItem(SETUP_CHOICE_KEY, "default"); } catch (e) { /* storage unavailable */ }
-    $("gate-overlay").hidden = true;
-    if (sheetConfigured()) pullFromSheet(); else setSyncStatus("Not connected — saving to this browser only. See google-sheets-sync/SETUP.md.", "warn");
-  });
-
-  $("gate-own").addEventListener("click", function(){
-    try { localStorage.setItem(SETUP_CHOICE_KEY, "own"); } catch (e) { /* storage unavailable */ }
-    $("gate-overlay").hidden = true;
-    $("sheet-url").value = "";
-    $("sheet-token").value = "";
-    setSyncStatus("Not connected — saving to this browser only. See google-sheets-sync/SETUP.md.", "warn");
-    var card = $("sync-card");
-    if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
-    $("sheet-url").focus();
   });
 
   // ---- init ----
@@ -1378,10 +1296,6 @@
   $("entry-date").value = todayISO();
   render();
   computeAmount();
-  if (setupChoice()) {
-    if (sheetConfigured()) pullFromSheet(); else setSyncStatus("Not connected — saving to this browser only. See google-sheets-sync/SETUP.md.", "warn");
-  } else {
-    $("gate-overlay").hidden = false;
-  }
+  if (sheetConfigured()) pullFromSheet(); else setSyncStatus("Not connected — saving to this browser only. See google-sheets-sync/SETUP.md.", "warn");
 })();
 </script>

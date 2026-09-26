@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PaisaLedger - shared design system
+   Tutor track - shared design system
    Loaded before each page's inline <style>; pages keep only page-unique rules.
    ========================================================================== */
 
@@ -285,6 +285,85 @@ body{
 .icon-ctrl .sun{ display:none; }
 :root[data-theme="dark"] .icon-ctrl .moon{ display:none; }
 :root[data-theme="dark"] .icon-ctrl .sun{ display:inline; color:var(--gold); }
+
+/* signed-in user + sign out (added by auth.js) */
+.user-chip{
+  display:none;
+  align-items:center;
+  max-width:9rem;
+  padding:.3rem .7rem;
+  border-radius:999px;
+  background:var(--moss-soft);
+  color:var(--moss);
+  border:1px solid var(--moss);
+  font-size:.75rem;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+@media (min-width:640px){ .user-chip{ display:inline-flex; } }
+.signout{ white-space:nowrap; }
+
+/* ---------- sign-in screen (added by auth.js) ---------- */
+
+.auth-overlay{
+  position:fixed;
+  inset:0;
+  z-index:60;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:1.5rem;
+  background:var(--paper);
+}
+.auth-card{
+  width:100%;
+  max-width:400px;
+  background:var(--card);
+  border:1px solid var(--rule);
+  border-radius:var(--r-card);
+  padding:1.75rem 1.5rem 1.5rem;
+  box-shadow:var(--shadow-card);
+}
+.auth-card .eyebrow{
+  display:inline-block;
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--moss);
+  background:var(--moss-soft);
+  padding:.15rem .6rem;
+  border-radius:999px;
+}
+.auth-card h2{ margin:.75rem 0 .35rem; font-size:1.25rem; }
+.auth-card p{ margin:0 0 1.25rem; font-size:.85rem; color:var(--slate); }
+.auth-field{
+  display:flex;
+  flex-direction:column;
+  gap:.35rem;
+  margin-bottom:.9rem;
+  font-size:.75rem;
+  font-weight:600;
+  color:var(--slate);
+}
+.auth-field input[type="password"]{
+  background:var(--panel);
+  border:1px solid var(--panel-rule);
+  border-radius:var(--r-ctrl);
+  padding:.5rem .7rem;
+  color:var(--ink);
+  width:100%;
+  font-size:.875rem;
+}
+.auth-error{
+  min-height:1.2em;
+  margin-bottom:.75rem;
+  font-size:.8rem;
+  color:var(--rust);
+}
+.auth-card .btn{ width:100%; padding:.7rem 1rem; font-size:.9rem; }
 
 /* ---------- page heading ---------- */
 

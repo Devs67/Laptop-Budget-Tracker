@@ -96,17 +96,30 @@ Anytime a page gains a feature that needs new sheet tabs (Finance, then later Lo
 (`doGet` returns an empty array for any tab that doesn't exist yet rather than failing, so pages
 degrade gracefully until you add the tab — but writes for that feature won't persist until you do.)
 
-## Sharing this with someone else
+## Logins: several people, one sheet
 
-You can hand your friend the same GitHub Pages link — the pages will not silently mix your data
-with theirs. The first time anyone opens `tuition.html` or `finance.html` on a browser that hasn't
-made a choice yet, they'll see a **"Whose tracker is this?"** prompt:
+Each person signs in with a **username and key**. The Apps Script checks the key (stored hashed in a
+`Users` tab), stamps every row they create with their username in a `user` column, and only ever
+returns or changes that person's own rows. Signing in once keeps them signed in on that device until
+they press **Sign out**.
 
-- **This is Dev's copy — continue** picks up the sheet already baked into the page (you).
-- **Connect my own Google Sheet** leaves them fully disconnected until they do steps 1–4 above
-  themselves (their own Sheet, their own Apps Script, their own deployment) and paste their own
-  URL + token into Settings. From then on their browser remembers that choice and never touches
-  your sheet.
+**Turning this on (or updating an existing deployment)** — do these in order, and only push the
+updated pages once step 3 is done, otherwise sync fails for everyone in the meantime:
 
-Nothing about this needs your involvement beyond sending them the link and this file — each
-person's data stays in their own spreadsheet, under their own Google account.
+1. Replace the contents of `Code.gs` in Apps Script with the current version from this folder.
+   If your username isn't `dev`, change `OWNER_USER` at the top first: every row created before
+   logins existed (no `user` value) is treated as belonging to that person.
+2. **Deploy → Manage deployments → pencil icon → New version → Deploy.** Same URL, same token.
+3. Create each person's login: in `Code.gs`, edit `NAME` and `KEY` inside `createOrResetUser`, select
+   that function in the dropdown and click **Run** (approve the extra permissions the first time).
+   Repeat per person, including yourself. Then set `KEY` back to a placeholder so it doesn't sit in
+   the code. Running it again for the same name resets that person's key.
+4. The `user` column is added to each tab automatically the first time anything is saved — no manual
+   header edits needed.
+
+**Good to know**
+- Five wrong keys for a username locks that username for 15 minutes.
+- A key is only as private as the device it's typed on; use **Sign out** on shared computers.
+- You (the sheet owner) can still see every row by opening the spreadsheet itself.
+- The sync URL and token are still in the page source. They only get someone to the sign-in check,
+  not to anyone's data.
