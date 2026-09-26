@@ -1,100 +1,21 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Galaxy Book5 360 &mdash; Savings Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
 <style>
-  :root{
-    --ink:#1C2B22;
-    --paper:#F6F1E4;
-    --card:#FFFDF6;
-    --rule:#DCD3B8;
-    --track-bg:#DCD3B8;
-    --slate:#5B6856;
-    --gold:#A97A22;
-    --gold-soft:#A97A2226;
-    --gold-fill:#A97A2280;
-    --moss:#3D6B49;
-    --moss-soft:#3D6B4940;
-    --rust:#A2432B;
-    --grid-line:#1C2B2209;
-    --shadow: 0 1px 0 rgba(28,43,34,.06);
-    --ease-out: cubic-bezier(0.23,1,0.32,1);
-    --ease-in-out: cubic-bezier(0.77,0,0.175,1);
-  }
-  :root[data-theme="dark"]{
-    --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E; --track-bg:#2E2A20;
-    --slate:#97A08C; --gold:#D2A23F; --gold-soft:#D2A23F26; --gold-fill:#D2A23F80; --moss:#5C9A6C; --moss-soft:#5C9A6C40; --rust:#C2654A;
-    --grid-line:#EAE4D00D;
-    --shadow: 0 1px 0 rgba(0,0,0,.3);
-  }
-  :root[data-theme="light"]{
-    --ink:#1C2B22; --paper:#F6F1E4; --card:#FFFDF6; --rule:#DCD3B8; --track-bg:#DCD3B8;
-    --slate:#5B6856; --gold:#A97A22; --gold-soft:#A97A2226; --gold-fill:#A97A2280; --moss:#3D6B49; --moss-soft:#3D6B4940; --rust:#A2432B;
-    --grid-line:#1C2B2209;
-    --shadow: 0 1px 0 rgba(28,43,34,.06);
-  }
-
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background-color:var(--paper);
-    background-image:
-      linear-gradient(var(--grid-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size:28px 28px;
-    color:var(--ink);
-    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-    line-height:1.5;
-    -webkit-font-smoothing:antialiased;
-  }
-  .sheet{
-    max-width:800px;
-    margin:0 auto;
-    padding:2.5rem 1.5rem 4rem;
-  }
-  .serif{ font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
-  .mono{
-    font-family: "SF Mono", "Cascadia Mono", Consolas, "Roboto Mono", monospace;
-    font-variant-numeric: tabular-nums;
-  }
-  .eyebrow{
-    font-family: "Segoe UI", system-ui, sans-serif;
-    font-size:.72rem;
-    letter-spacing:.14em;
-    text-transform:uppercase;
-    color:var(--slate);
-    font-weight:600;
-  }
-
-  header.top{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:1rem;
-    padding-bottom:1.5rem;
-    border-bottom:2px solid var(--ink);
-    margin-bottom:1.2rem;
-  }
-  header.top h1{
-    margin:.2rem 0 .35rem;
-    font-size:1.9rem;
-    font-weight:600;
-    text-wrap:balance;
-  }
-  .spec-line{
-    color:var(--slate);
-    font-size:.92rem;
-  }
   .countdown{
     text-align:right;
     flex-shrink:0;
-    border:1px solid var(--rule);
-    border-radius:7px;
-    padding:.55rem .8rem;
-    background:var(--card);
-    box-shadow:var(--shadow);
+    border:1px solid var(--panel-rule);
+    border-radius:var(--r-panel);
+    padding:.6rem .9rem;
+    background:var(--panel);
   }
   .countdown .num{
-    font-size:1.6rem;
+    font-size:1.5rem;
     font-weight:700;
     color:var(--gold);
     line-height:1;
@@ -102,109 +23,18 @@
   .countdown .lbl{
     font-size:.68rem;
     color:var(--slate);
-    letter-spacing:.06em;
+    letter-spacing:.04em;
     text-transform:uppercase;
-    margin-top:.2rem;
+    margin-top:.25rem;
   }
-
-  .theme-toggle-wrap{
+  .page-head-row{
     display:flex;
     justify-content:space-between;
-    align-items:center;
-    gap:.6rem;
+    align-items:flex-start;
+    gap:1rem;
     flex-wrap:wrap;
-    margin-bottom:1.6rem;
-  }
-  .page-nav{
-    display:flex;
-    gap:.2rem;
-    background:var(--card);
-    border:1px solid var(--rule);
-    border-radius:99px;
-    padding:.22rem;
-    width:fit-content;
-  }
-  .page-nav a{
-    padding:.42rem .8rem;
-    border-radius:99px;
-    font-size:.78rem;
-    font-weight:600;
-    text-decoration:none;
-    color:var(--slate);
-    white-space:nowrap;
-    transition: color 150ms var(--ease-out), background-color 150ms var(--ease-out);
-  }
-  .page-nav a.active{ background:var(--ink); color:var(--paper); }
-  @media (hover:hover) and (pointer:fine){
-    .page-nav a:hover:not(.active){ color:var(--gold); }
-  }
-  .theme-toggle{
-    position:relative;
-    width:56px;
-    height:28px;
-    border-radius:99px;
-    border:1px solid var(--rule);
-    background:var(--card);
-    cursor:pointer;
-    padding:0;
-    transition: transform 120ms var(--ease-out);
-  }
-  .theme-toggle .icon{
-    position:absolute;
-    top:50%;
-    transform:translateY(-50%);
-    font-size:.75rem;
-    line-height:1;
-    color:var(--slate);
-    pointer-events:none;
-  }
-  .theme-toggle .icon.sun{ left:6px; }
-  .theme-toggle .icon.moon{ right:6px; }
-  .theme-toggle .knob{
-    position:absolute;
-    top:2px;
-    left:2px;
-    width:22px;
-    height:22px;
-    border-radius:50%;
-    background:var(--ink);
-  }
-  :root[data-theme="dark"] .theme-toggle .knob{
-    left:30px;
-    background:var(--gold);
-  }
-  @media (prefers-reduced-motion: no-preference){
-    .theme-toggle .knob{ transition:left .25s ease, background .25s ease; }
-    .theme-toggle:active{ transform:scale(.94); }
   }
 
-  section{ margin-bottom:2.25rem; }
-  h2{
-    font-size:1rem;
-    font-weight:700;
-    margin:0 0 .3rem;
-    display:flex;
-    align-items:baseline;
-    gap:.5rem;
-  }
-  h2 .count{
-    font-size:.75rem;
-    color:var(--slate);
-    font-weight:400;
-  }
-  .section-sub{
-    font-size:.82rem;
-    color:var(--slate);
-    margin:0 0 .9rem;
-  }
-
-  .goal-card{
-    background:var(--card);
-    border:1px solid var(--rule);
-    border-radius:12px;
-    padding:1.5rem 1.5rem 1.7rem;
-    box-shadow:var(--shadow);
-  }
   .goal-figures{
     display:flex;
     justify-content:space-between;
@@ -272,25 +102,6 @@
   }
   .track-caption .dot{ color:var(--gold); }
   .track-caption .dot.moss{ color:var(--moss); }
-  .stat-row{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:1rem;
-    border-top:1px solid var(--rule);
-    padding-top:1rem;
-  }
-  @media (max-width:560px){ .stat-row{ grid-template-columns:repeat(2,1fr); } }
-  .stat-row .stat .v{
-    font-size:1.15rem;
-    font-weight:700;
-  }
-  .stat-row .stat .k{
-    font-size:.72rem;
-    color:var(--slate);
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    margin-top:.1rem;
-  }
   .goal-edit{
     display:flex;
     flex-direction:column;
@@ -299,16 +110,6 @@
     padding-top:1rem;
     border-top:1px solid var(--rule);
     font-size:.85rem;
-  }
-  .goal-edit label{
-    display:flex;
-    flex-direction:column;
-    gap:.3rem;
-    color:var(--slate);
-    font-size:.72rem;
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    width:100%;
   }
   @media (min-width:480px){
     .goal-edit{ flex-direction:row; flex-wrap:wrap; align-items:flex-end; }
@@ -319,38 +120,11 @@
     color:var(--slate);
     margin-top:.7rem;
   }
-  input, select, .btn{
-    font-family:inherit;
-    font-size:.92rem;
-  }
-  input[type="number"], input[type="date"], input[type="text"], select{
-    background:var(--paper);
-    border:1px solid var(--rule);
-    border-radius:7px;
-    padding:.4rem .55rem;
-    color:var(--ink);
-    width:100%;
-  }
-  input:focus-visible, select:focus-visible, .btn:focus-visible, .icon-btn:focus-visible, .status-toggle button:focus-visible{
-    outline:2px solid var(--gold);
-    outline-offset:2px;
-  }
-
   .log-form{
     display:flex;
     flex-direction:column;
     gap:.8rem;
     margin-bottom:1.2rem;
-  }
-  .log-form label{
-    display:flex;
-    flex-direction:column;
-    gap:.3rem;
-    font-size:.72rem;
-    color:var(--slate);
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    width:100%;
   }
   .log-form .btn{ width:100%; }
   @media (min-width:640px){
@@ -361,41 +135,7 @@
     .log-form .date-field{ width:9.5rem; }
     .log-form .btn{ width:auto; }
   }
-  .status-toggle{
-    display:flex;
-    border:1px solid var(--rule);
-    border-radius:7px;
-    overflow:hidden;
-    width:100%;
-  }
-  .status-toggle button{
-    flex:1;
-    border:none;
-    background:var(--paper);
-    color:var(--slate);
-    padding:.4rem .7rem;
-    font-size:.82rem;
-    font-weight:600;
-    cursor:pointer;
-    transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
-  }
-  .status-toggle button.active[data-status="earned"]{ background:var(--gold); color:var(--card); }
-  .status-toggle button.active[data-status="received"]{ background:var(--moss); color:var(--card); }
-  .btn{
-    background:var(--ink);
-    color:var(--paper);
-    border:none;
-    border-radius:7px;
-    padding:.5rem 1rem;
-    font-weight:600;
-    cursor:pointer;
-    transition: opacity 150ms var(--ease-out);
-  }
-  .btn:hover{ opacity:.88; }
-  .btn:active{ opacity:.8; }
   @media (prefers-reduced-motion: no-preference){
-    .btn, .status-toggle button, .icon-btn{ transition-property: opacity, background-color, color, transform; transition-duration: 150ms; transition-timing-function: var(--ease-out); }
-    .btn:active{ transform:scale(.97); }
     .status-toggle button:active{ transform:scale(.96); }
     .icon-btn:active{ transform:scale(.94); }
   }
@@ -415,7 +155,7 @@
   .month-bar select{ width:auto; min-width:11rem; }
 
   .ledger{
-    border-top:1px solid var(--ink);
+    border-top:1px solid var(--rule);
   }
   .ledger .row{
     display:grid;
@@ -436,17 +176,6 @@
   .ledger .row .date{ color:var(--slate); font-size:.85rem; }
   .ledger .row .source{ font-size:.9rem; }
   .ledger .row .amount{ font-weight:600; text-align:right; }
-  .status-pill{
-    font-size:.65rem;
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    padding:.2rem .5rem;
-    border-radius:99px;
-    font-weight:700;
-    white-space:nowrap;
-  }
-  .status-pill.earned{ background:var(--gold-soft); color:var(--gold); }
-  .status-pill.received{ background:var(--moss-soft); color:var(--moss); }
   .row-actions{ display:flex; gap:.4rem; white-space:nowrap; }
   .ledger .empty{
     padding:1rem 0;
@@ -454,23 +183,12 @@
     font-size:.88rem;
     font-style:italic;
   }
-  .icon-btn{
-    background:none;
-    border:none;
-    cursor:pointer;
-    font-size:.78rem;
-    padding:.2rem .3rem;
-    font-weight:600;
-  }
-  .icon-btn.mark{ color:var(--moss); }
-  .icon-btn.remove{ color:var(--rust); }
-  .icon-btn:hover{ text-decoration:underline; }
   .ledger .summary-row{
     display:grid;
     grid-template-columns:1fr auto;
     gap:.3rem 1rem;
     padding:.8rem 0 0;
-    border-top:2px solid var(--ink);
+    border-top:1px solid var(--rule);
     margin-top:.2rem;
     font-size:.88rem;
   }
@@ -487,8 +205,9 @@
   .timeline .step{
     background:var(--card);
     border:1px solid var(--rule);
-    border-radius:10px;
-    padding:.9rem 1rem;
+    border-radius:var(--r-panel);
+    padding:1rem 1.1rem;
+    box-shadow:var(--shadow-card);
   }
   .timeline .step .when{
     font-size:.68rem;
@@ -507,8 +226,9 @@
     background:var(--card);
     border:1px solid var(--rule);
     border-left:4px solid var(--rule);
-    border-radius:10px;
-    padding:1rem 1.1rem;
+    border-radius:var(--r-panel);
+    padding:1.1rem 1.2rem;
+    box-shadow:var(--shadow-card);
   }
   .price-card.cheapest{ border-left-color:var(--moss); }
   .price-card .retailer{
@@ -520,15 +240,6 @@
   .price-card .retailer a{ color:var(--ink); text-decoration:none; font-weight:700; font-size:.95rem; }
   @media (hover:hover) and (pointer:fine){
     .price-card .retailer a:hover{ text-decoration:underline; }
-  }
-  .badge{
-    font-size:.65rem;
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    background:var(--moss);
-    color:var(--card);
-    padding:.15rem .45rem;
-    border-radius:99px;
   }
   .price-card .price-row{
     display:flex;
@@ -586,40 +297,57 @@
   .bbd-table th{ color:var(--slate); font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; }
   .bbd-table td.amt{ text-align:right; }
 
-  .disclaimer{
-    font-size:.78rem;
-    color:var(--slate);
-    border-top:1px dashed var(--rule);
-    padding-top:1.2rem;
-    margin-top:2.5rem;
-  }
-  .disclaimer p{ margin:.35rem 0; }
 </style>
 
-<div class="sheet">
-  <header class="top">
-    <div>
-      <div class="eyebrow">Savings ledger</div>
-      <h1 class="serif" id="product-name">Samsung Galaxy Book5 360 Ultra 7</h1>
-      <div class="spec-line">Intel Core Ultra 7 256V &middot; 16GB RAM / 512GB SSD &middot; 15.6&Prime; AMOLED, S Pen</div>
-    </div>
-    <div class="countdown">
-      <div class="num mono" id="days-left">&mdash;</div>
-      <div class="lbl">days to 20 Sep</div>
-    </div>
-  </header>
+<header class="appbar">
+  <div class="appbar-inner">
+    <div class="appbar-row">
+      <a class="brand" href="index.html">
+        <span class="brand-mark" aria-hidden="true">&#8377;</span>
+        <span>
+          <span class="brand-name">
+            <strong>PaisaLedger</strong>
+            <span class="brand-chip">&#8377; INR</span>
+          </span>
+          <p class="brand-sub">Savings Goal &middot; Tuition Logger &middot; Finance Tracker</p>
+        </span>
+      </a>
 
-  <div class="theme-toggle-wrap">
-    <nav class="page-nav">
-      <a href="index.html" class="active">Savings</a>
-      <a href="tuition.html">Tuition</a>
-      <a href="finance.html">Finances</a>
+      <nav class="page-nav">
+        <a href="index.html" class="active">&#127919; Savings Goal</a>
+        <a href="tuition.html">&#128218; Tuition Logger</a>
+        <a href="finance.html">&#128176; Finance Tracker</a>
+      </nav>
+
+      <div class="appbar-actions">
+        <button type="button" class="icon-ctrl" id="theme-toggle" aria-label="Switch between light and dark background" aria-pressed="false">
+          <span class="moon">&#9790;</span>
+          <span class="sun">&#9728;</span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="page-nav-mobile">
+      <a href="index.html" class="active">&#127919; Savings</a>
+      <a href="tuition.html">&#128218; Tuition</a>
+      <a href="finance.html">&#128176; Finance</a>
     </nav>
-    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch between light and dark background" aria-pressed="false">
-      <span class="icon sun">&#9728;</span>
-      <span class="icon moon">&#9790;</span>
-      <span class="knob"></span>
-    </button>
+  </div>
+</header>
+
+<div class="sheet">
+  <div class="page-head">
+    <div class="page-head-row">
+      <div>
+        <span class="eyebrow">Savings ledger</span>
+        <h1 id="product-name">Samsung Galaxy Book5 360 Ultra 7</h1>
+        <p class="spec-line">Intel Core Ultra 7 256V &middot; 16GB RAM / 512GB SSD &middot; 15.6&Prime; AMOLED, S Pen</p>
+      </div>
+      <div class="countdown">
+        <div class="num mono" id="days-left">&mdash;</div>
+        <div class="lbl">days to 20 Sep</div>
+      </div>
+    </div>
   </div>
 
   <section>
@@ -639,20 +367,20 @@
       <div class="track-caption">Amber fill = earned but unpaid &middot; <span class="dot moss">&#9679;</span> moss fill = received &middot; <span class="dot">&#9679;</span> gold tick = original tuition-plan estimate (&#8377;1,13,600)</div>
       <div class="stat-row">
         <div class="stat">
-          <div class="v mono" id="remaining-amount">&#8377;0</div>
           <div class="k">Still to save</div>
+          <div class="v mono blue" id="remaining-amount">&#8377;0</div>
         </div>
         <div class="stat">
-          <div class="v mono" id="per-day">&#8377;0</div>
           <div class="k">Needed per day</div>
+          <div class="v mono" id="per-day">&#8377;0</div>
         </div>
         <div class="stat">
-          <div class="v mono" id="per-week">&#8377;0</div>
           <div class="k">Needed per week</div>
+          <div class="v mono" id="per-week">&#8377;0</div>
         </div>
         <div class="stat">
-          <div class="v mono" id="outstanding-amount">&#8377;0</div>
           <div class="k">Earned, unpaid</div>
+          <div class="v mono gold" id="outstanding-amount">&#8377;0</div>
         </div>
       </div>
       <div class="goal-edit">
@@ -694,6 +422,41 @@
     </div>
     <div class="ledger" id="ledger-body">
       <div class="empty">No entries yet &mdash; log your first one above.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3>Savings progress by month</h3>
+          <p class="chart-sub" id="savings-chart-sub">How much landed in hand each month, against what you earned but haven&rsquo;t been paid.</p>
+        </div>
+        <div class="chart-legend" data-chart-legend="savings-chart"></div>
+      </div>
+
+      <div class="chart-stats">
+        <div class="chart-stat">
+          <span class="k">Total received</span>
+          <span class="v moss mono" id="chart-total-received">&#8377;0</span>
+        </div>
+        <div class="chart-stat">
+          <span class="k">Still unpaid</span>
+          <span class="v gold mono" id="chart-total-unpaid">&#8377;0</span>
+        </div>
+        <div class="chart-stat">
+          <span class="k">Best month</span>
+          <span class="v blue mono" id="chart-best-month">&mdash;</span>
+        </div>
+        <div class="chart-stat">
+          <span class="k">Avg. received / month</span>
+          <span class="v mono" id="chart-avg-month">&#8377;0</span>
+        </div>
+      </div>
+
+      <div id="savings-chart"></div>
+
+      <div class="chart-foot" id="savings-chart-foot"></div>
     </div>
   </section>
 
@@ -761,6 +524,7 @@
   </div>
 </div>
 
+<script src="charts.js"></script>
 <script>
 (function(){
   "use strict";
@@ -919,6 +683,96 @@
     select.value = viewMonth;
   }
 
+  // ---- savings progress bar chart ----
+
+  var savingsChart = PaisaChart.bar("savings-chart", {
+    ariaLabel: "Savings received and still unpaid, by month",
+    emptyText: "No entries yet — log an earning above and the monthly bars appear here."
+  });
+
+  // Last 6 months ending at the latest month that has an entry (today if none).
+  function recentMonthKeys(count){
+    var latest = todayISO().slice(0, 7);
+    state.entries.forEach(function(e){
+      if (e.date && e.date.slice(0, 7) > latest) latest = e.date.slice(0, 7);
+    });
+    var year = Number(latest.slice(0, 4));
+    var month = Number(latest.slice(5, 7)) - 1; // 0-indexed
+    var keys = [];
+    for (var i = count - 1; i >= 0; i--) {
+      var d = new Date(year, month - i, 1);
+      keys.push(d.getFullYear() + "-" + (d.getMonth() + 1 < 10 ? "0" : "") + (d.getMonth() + 1));
+    }
+    return keys;
+  }
+
+  function shortMonthLabel(ym){
+    var d = new Date(ym + "-01T00:00:00");
+    if (isNaN(d.getTime())) return ym;
+    return d.toLocaleDateString("en-IN", { month: "short" }) + " " + String(d.getFullYear()).slice(2);
+  }
+
+  function renderSavingsChart(){
+    var months = recentMonthKeys(6);
+    var received = [];
+    var unpaid = [];
+
+    months.forEach(function(ym){
+      var r = 0, u = 0;
+      state.entries.forEach(function(e){
+        if (!e.date || e.date.slice(0, 7) !== ym) return;
+        var amt = Number(e.amount) || 0;
+        if (e.status === "received") r += amt; else u += amt;
+      });
+      received.push(r);
+      unpaid.push(u);
+    });
+
+    savingsChart.setData({
+      categories: months.map(shortMonthLabel),
+      series: [
+        { name: "Received", color: "moss", values: received },
+        { name: "Earned, unpaid", color: "gold", values: unpaid }
+      ]
+    });
+
+    var totalReceived = received.reduce(function(s, v){ return s + v; }, 0);
+    var totalUnpaid = unpaid.reduce(function(s, v){ return s + v; }, 0);
+
+    var bestIdx = -1;
+    received.forEach(function(v, i){
+      if (v > 0 && (bestIdx === -1 || v > received[bestIdx])) bestIdx = i;
+    });
+    var monthsWithMoney = received.filter(function(v){ return v > 0; }).length;
+
+    $("chart-total-received").textContent = fmt(totalReceived);
+    $("chart-total-unpaid").textContent = fmt(totalUnpaid);
+    $("chart-best-month").textContent = bestIdx === -1
+      ? "—"
+      : shortMonthLabel(months[bestIdx]) + " · " + fmt(received[bestIdx]);
+    $("chart-avg-month").textContent = monthsWithMoney
+      ? fmt(totalReceived / monthsWithMoney)
+      : fmt(0);
+
+    $("savings-chart-sub").textContent =
+      "Six months to " + monthLabel(months[months.length - 1]) + " · received vs. earned-but-unpaid.";
+
+    var target = Number(state.target) || 0;
+    var saved = receivedTotal();
+    var remaining = Math.max(0, target - saved);
+    var foot = $("savings-chart-foot");
+    if (!totalReceived && !totalUnpaid) {
+      foot.textContent = "Bars fill in as you log entries — received in green, earned-but-unpaid in amber.";
+    } else if (remaining <= 0) {
+      foot.innerHTML = "Target met — you've banked <strong>" + fmt(saved) + "</strong> against a " + fmt(target) + " goal.";
+    } else {
+      var avg = monthsWithMoney ? totalReceived / monthsWithMoney : 0;
+      foot.innerHTML = avg > 0
+        ? "At <strong>" + fmt(avg) + "/month</strong> received, the remaining <strong>" + fmt(remaining) + "</strong> takes about <strong>" + Math.ceil(remaining / avg) + " more month" + (Math.ceil(remaining / avg) === 1 ? "" : "s") + "</strong>."
+        : "Still <strong>" + fmt(remaining) + "</strong> to go toward the " + fmt(target) + " target.";
+    }
+  }
+
   function render(){
     var targetEl = $("target-input");
     var dateEl = $("target-date-input");
@@ -1009,6 +863,8 @@
         '<div class="label">Total earned</div><div class="val">' + fmt(monthEarned) + '</div>';
       ledgerBody.appendChild(summaryRow);
     }
+
+    renderSavingsChart();
 
     renderPrice("amazon");
     renderPrice("flipkart");

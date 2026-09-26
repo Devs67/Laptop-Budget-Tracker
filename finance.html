@@ -1,227 +1,25 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Personal Finances</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
 <style>
-  :root{
-    --ink:#1C2B22;
-    --paper:#F6F1E4;
-    --card:#FFFDF6;
-    --rule:#DCD3B8;
-    --track-bg:#DCD3B8;
-    --slate:#5B6856;
-    --gold:#A97A22;
-    --gold-soft:#A97A2226;
-    --gold-fill:#A97A2280;
-    --moss:#3D6B49;
-    --moss-soft:#3D6B4940;
-    --rust:#A2432B;
-    --rust-soft:#A2432B26;
-    --grid-line:#1C2B2209;
-    --shadow: 0 1px 0 rgba(28,43,34,.06);
-    --ease-out: cubic-bezier(0.23,1,0.32,1);
-    --ease-in-out: cubic-bezier(0.77,0,0.175,1);
-  }
-  :root[data-theme="dark"]{
-    --ink:#EAE4D0; --paper:#10160F; --card:#182016; --rule:#33402E; --track-bg:#2E2A20;
-    --slate:#97A08C; --gold:#D2A23F; --gold-soft:#D2A23F26; --gold-fill:#D2A23F80; --moss:#5C9A6C; --moss-soft:#5C9A6C40; --rust:#C2654A; --rust-soft:#C2654A26;
-    --grid-line:#EAE4D00D;
-    --shadow: 0 1px 0 rgba(0,0,0,.3);
-  }
-  :root[data-theme="light"]{
-    --ink:#1C2B22; --paper:#F6F1E4; --card:#FFFDF6; --rule:#DCD3B8; --track-bg:#DCD3B8;
-    --slate:#5B6856; --gold:#A97A22; --gold-soft:#A97A2226; --gold-fill:#A97A2280; --moss:#3D6B49; --moss-soft:#3D6B4940; --rust:#A2432B; --rust-soft:#A2432B26;
-    --grid-line:#1C2B2209;
-    --shadow: 0 1px 0 rgba(28,43,34,.06);
-  }
-
-  *{box-sizing:border-box;}
-  html{ -webkit-text-size-adjust:100%; }
-  body{
-    margin:0;
-    background-color:var(--paper);
-    background-image:
-      linear-gradient(var(--grid-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size:28px 28px;
-    color:var(--ink);
-    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-    line-height:1.5;
-    -webkit-font-smoothing:antialiased;
-  }
-  .sheet{
-    max-width:640px;
-    margin:0 auto;
-    padding:1.5rem 1rem 4rem;
-  }
-  @media (min-width:600px){ .sheet{ padding:2.5rem 1.5rem 4rem; } }
-  .serif{ font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; }
-  .mono{
-    font-family: "SF Mono", "Cascadia Mono", Consolas, "Roboto Mono", monospace;
-    font-variant-numeric: tabular-nums;
-  }
-  .eyebrow{
-    font-size:.72rem;
-    letter-spacing:.14em;
-    text-transform:uppercase;
-    color:var(--slate);
-    font-weight:600;
-  }
-
-  header.top{
-    padding-bottom:1.2rem;
-    border-bottom:2px solid var(--ink);
-    margin-bottom:1rem;
-  }
-  header.top h1{
-    margin:.2rem 0 .3rem;
-    font-size:1.6rem;
-    font-weight:600;
-    text-wrap:balance;
-  }
-  @media (min-width:600px){ header.top h1{ font-size:1.9rem; } }
-  .spec-line{ color:var(--slate); font-size:.88rem; }
-
-  .theme-toggle-wrap{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:.6rem;
-    flex-wrap:wrap;
-    margin-bottom:1.4rem;
-  }
-  .page-nav{
-    display:flex;
-    gap:.2rem;
-    background:var(--card);
-    border:1px solid var(--rule);
-    border-radius:99px;
-    padding:.22rem;
-    width:fit-content;
-  }
-  .page-nav a{
-    padding:.42rem .8rem;
-    border-radius:99px;
-    font-size:.78rem;
-    font-weight:600;
-    text-decoration:none;
-    color:var(--slate);
-    white-space:nowrap;
-    transition: color 150ms var(--ease-out), background-color 150ms var(--ease-out);
-  }
-  .page-nav a.active{ background:var(--ink); color:var(--paper); }
-  @media (hover:hover) and (pointer:fine){
-    .page-nav a:hover:not(.active){ color:var(--gold); }
-  }
-  .theme-toggle{
-    position:relative;
-    width:52px;
-    height:28px;
-    flex-shrink:0;
-    border-radius:99px;
-    border:1px solid var(--rule);
-    background:var(--card);
-    cursor:pointer;
-    padding:0;
-    transition: transform 120ms var(--ease-out);
-  }
-  .theme-toggle .icon{
-    position:absolute;
-    top:50%;
-    transform:translateY(-50%);
-    font-size:.75rem;
-    line-height:1;
-    color:var(--slate);
-    pointer-events:none;
-  }
-  .theme-toggle .icon.sun{ left:6px; }
-  .theme-toggle .icon.moon{ right:6px; }
-  .theme-toggle .knob{
-    position:absolute;
-    top:2px;
-    left:2px;
-    width:22px;
-    height:22px;
-    border-radius:50%;
-    background:var(--ink);
-  }
-  :root[data-theme="dark"] .theme-toggle .knob{ left:26px; background:var(--gold); }
-  @media (prefers-reduced-motion: no-preference){
-    .theme-toggle .knob{ transition:left .25s ease, background .25s ease; }
-    .theme-toggle:active{ transform:scale(.94); }
-  }
-
-  section{ margin-bottom:1.6rem; }
-  h2{
-    font-size:.95rem;
-    font-weight:700;
-    margin:0 0 .3rem;
-  }
-  .section-sub{ font-size:.8rem; color:var(--slate); margin:0 0 .8rem; }
-
-  .card{
-    background:var(--card);
-    border:1px solid var(--rule);
-    border-radius:14px;
-    padding:1.1rem 1.1rem;
-    box-shadow:var(--shadow);
-  }
-
   /* ---- summary ---- */
-  .summary-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:.6rem;
-  }
-  .summary-grid .stat{
-    text-align:center;
-    padding:.3rem 0;
-  }
-  .summary-grid .stat .v{
-    font-size:1.15rem;
-    font-weight:700;
-    word-break:break-word;
-    letter-spacing:-0.01em;
-  }
-  @media (min-width:400px){ .summary-grid .stat .v{ font-size:1.35rem; } }
-  .summary-grid .stat .v.income{ color:var(--moss); }
-  .summary-grid .stat .v.expense{ color:var(--rust); }
-  .summary-grid .stat .k{
-    font-size:.66rem;
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    color:var(--slate);
-    margin-top:.15rem;
-  }
+  .summary-row{ grid-template-columns:repeat(3,1fr); }
+  @media (max-width:520px){ .summary-row{ grid-template-columns:1fr; } }
   .summary-note{
-    font-size:.76rem;
+    font-size:.78rem;
     color:var(--slate);
-    text-align:center;
-    margin-top:.7rem;
-    padding-top:.7rem;
-    border-top:1px solid var(--rule);
+    margin-top:1rem;
   }
 
-  /* ---- quick add (mobile-first: stacked, big touch targets) ---- */
-  .type-toggle{
-    display:flex;
-    border:1px solid var(--rule);
-    border-radius:10px;
-    overflow:hidden;
-    margin-bottom:.9rem;
-  }
-  .type-toggle button{
-    flex:1;
-    border:none;
-    background:var(--paper);
-    color:var(--slate);
-    padding:.7rem;
-    font-size:.92rem;
-    font-weight:700;
-    cursor:pointer;
-    transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
-  }
-  .type-toggle button.active[data-type="income"]{ background:var(--moss); color:#fff; }
+  /* ---- add form ---- */
+  .type-toggle{ margin-bottom:1rem; }
+  .type-toggle button{ padding:.65rem; font-size:.875rem; }
   .type-toggle button.active[data-type="expense"]{ background:var(--rust); color:#fff; }
+  :root[data-theme="dark"] .type-toggle button.active[data-type="expense"]{ color:#0D140E; }
 
   .field{
     display:flex;
@@ -230,57 +28,21 @@
     margin-bottom:.9rem;
   }
   .field .label{
-    font-size:.72rem;
+    font-size:.75rem;
     color:var(--slate);
-    text-transform:uppercase;
-    letter-spacing:.05em;
     font-weight:600;
   }
   .field-row{ display:flex; gap:.7rem; }
   .field-row .field{ flex:1; min-width:0; }
-
-  input, select, .btn{ font-family:inherit; }
-  input[type="number"], input[type="date"], input[type="text"], select{
-    background:var(--paper);
-    border:1px solid var(--rule);
-    border-radius:10px;
-    padding:.7rem .8rem;
-    color:var(--ink);
-    width:100%;
-    font-size:1rem;
-  }
   .amount-input{
     font-size:1.5rem;
     font-weight:700;
-    padding:.6rem .8rem;
+    padding:.55rem .8rem;
     letter-spacing:-0.01em;
   }
-  input:focus-visible, select:focus-visible, .btn:focus-visible, .icon-btn:focus-visible, .type-toggle button:focus-visible, .page-nav a:focus-visible{
-    outline:2px solid var(--gold);
-    outline-offset:2px;
-  }
-  .btn{
-    background:var(--ink);
-    color:var(--paper);
-    border:none;
-    border-radius:10px;
-    padding:.85rem 1rem;
-    font-weight:700;
-    font-size:1rem;
-    cursor:pointer;
-    width:100%;
-    transition: opacity 150ms var(--ease-out);
-  }
-  .btn:hover{ opacity:.9; }
-  .btn:active{ opacity:.82; }
-  .btn.small{ width:auto; padding:.5rem .9rem; font-size:.85rem; border-radius:8px; }
-  .btn.ghost{ background:none; color:var(--ink); border:1px solid var(--rule); }
-  @media (prefers-reduced-motion: no-preference){
-    .btn, .icon-btn, .type-toggle button{ transition-property: opacity, background-color, color, transform; transition-duration: 150ms; transition-timing-function: var(--ease-out); }
-    .btn:active{ transform:scale(.97); }
-    .icon-btn:active{ transform:scale(.94); }
-    .type-toggle button:active{ transform:scale(.97); }
-  }
+  .btn{ width:100%; padding:.75rem 1rem; font-size:.9rem; }
+  .btn.small{ width:auto; padding:.4rem .75rem; font-size:.75rem; }
+  .btn.ghost{ width:100%; }
 
   /* ---- two-column income/expense ---- */
   .two-col{ display:flex; flex-direction:column; gap:1.4rem; }
@@ -294,29 +56,30 @@
     align-items:baseline;
     margin-bottom:.6rem;
   }
-  .col-head h3{ margin:0; font-size:.9rem; font-weight:700; }
+  .col-head h3{ margin:0; font-size:.95rem; font-weight:700; }
   .col-head .col-total{ font-weight:700; font-size:.95rem; }
   .col-head.income h3, .col-head.income .col-total{ color:var(--moss); }
   .col-head.expense h3, .col-head.expense .col-total{ color:var(--rust); }
 
-  /* ---- entry list: card-per-row, mobile-first ---- */
+  /* ---- entry list ---- */
   .entry-list{ display:flex; flex-direction:column; gap:.6rem; }
   .entry-card{
     background:var(--card);
     border:1px solid var(--rule);
     border-left:4px solid var(--rule);
-    border-radius:12px;
+    border-radius:var(--r-panel);
     padding:.85rem 1rem;
     display:flex;
     align-items:center;
     gap:.8rem;
+    box-shadow:var(--shadow-card);
   }
   .entry-card.income{ border-left-color:var(--moss); }
   .entry-card.expense{ border-left-color:var(--rust); }
   .entry-card .entry-main{ flex:1; min-width:0; }
-  .entry-card .entry-category{ font-weight:700; font-size:.95rem; }
+  .entry-card .entry-category{ font-weight:700; font-size:.9rem; }
   .entry-card .entry-meta{
-    font-size:.76rem;
+    font-size:.75rem;
     color:var(--slate);
     margin-top:.15rem;
     display:flex;
@@ -329,32 +92,16 @@
     text-transform:uppercase;
     letter-spacing:.05em;
     font-weight:700;
-    padding:.12rem .4rem;
+    padding:.12rem .45rem;
     border-radius:99px;
     background:var(--gold-soft);
     color:var(--gold);
   }
-  .entry-card .entry-amount{
-    font-weight:700;
-    font-size:1.05rem;
-    white-space:nowrap;
-  }
+  .entry-card .entry-amount{ font-weight:700; font-size:1rem; white-space:nowrap; }
   .entry-card .entry-amount.income{ color:var(--moss); }
   .entry-card .entry-amount.expense{ color:var(--rust); }
   .entry-card .entry-side{ display:flex; flex-direction:column; align-items:flex-end; gap:.3rem; }
-  .icon-btn{
-    background:none;
-    border:none;
-    cursor:pointer;
-    color:var(--rust);
-    font-size:.72rem;
-    font-weight:600;
-    padding:.3rem;
-    min-height:32px;
-  }
-  @media (hover:hover) and (pointer:fine){
-    .icon-btn:hover{ text-decoration:underline; }
-  }
+  .icon-btn{ color:var(--rust); min-height:32px; }
   .empty{
     padding:1.2rem 0;
     color:var(--slate);
@@ -363,6 +110,7 @@
     text-align:center;
   }
 
+  /* ---- loans ---- */
   .loan-card{ margin-bottom:1rem; }
   .loan-card:last-child{ margin-bottom:0; }
   .loan-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.8rem; gap:.6rem; }
@@ -386,6 +134,7 @@
   .loan-payments .lp-row{ display:flex; justify-content:space-between; align-items:center; gap:.5rem; padding:.3rem 0; }
   .loan-payments .lp-amount{ color:var(--ink); font-weight:600; }
 
+  /* ---- first-visit gate ---- */
   .gate-overlay{
     position:fixed;
     inset:0;
@@ -401,13 +150,24 @@
     background:var(--card);
     color:var(--ink);
     border:1px solid var(--rule);
-    border-radius:14px;
+    border-radius:var(--r-card);
     padding:1.6rem 1.6rem 1.4rem;
     max-width:420px;
     width:100%;
     box-shadow:0 12px 40px rgba(0,0,0,.3);
   }
-  .gate-card h2{ margin:.2rem 0 .6rem; font-size:1.15rem; font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; }
+  .gate-card .eyebrow{
+    display:inline-block;
+    font-size:.7rem;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--moss);
+    background:var(--moss-soft);
+    padding:.15rem .6rem;
+    border-radius:999px;
+  }
+  .gate-card h2{ margin:.6rem 0 .6rem; font-size:1.15rem; }
   .gate-card p{ font-size:.85rem; color:var(--slate); margin:0 0 1.2rem; }
   .gate-card .btn{ margin-bottom:.6rem; }
   .gate-card .btn:last-child{ margin-bottom:0; }
@@ -417,54 +177,82 @@
   .sync-status.warn{ color:var(--slate); }
   .sync-status.error{ color:var(--rust); }
   .sync-status.busy{ color:var(--gold); }
-
-  .disclaimer{
-    font-size:.76rem;
-    color:var(--slate);
-    border-top:1px dashed var(--rule);
-    padding-top:1.1rem;
-    margin-top:2rem;
-  }
-  .disclaimer p{ margin:.35rem 0; }
 </style>
 
-<div class="sheet">
-  <header class="top">
-    <div class="eyebrow">Personal finances</div>
-    <h1 class="serif">Income &amp; Expenses</h1>
-    <div class="spec-line">Salary, other income, and expenses — plus every paid tuition session, pulled in automatically.</div>
-  </header>
+<header class="appbar">
+  <div class="appbar-inner">
+    <div class="appbar-row">
+      <a class="brand" href="index.html">
+        <span class="brand-mark" aria-hidden="true">&#8377;</span>
+        <span>
+          <span class="brand-name">
+            <strong>PaisaLedger</strong>
+            <span class="brand-chip">&#8377; INR</span>
+          </span>
+          <p class="brand-sub">Savings Goal &middot; Tuition Logger &middot; Finance Tracker</p>
+        </span>
+      </a>
 
-  <div class="theme-toggle-wrap">
-    <nav class="page-nav">
-      <a href="index.html">Savings</a>
-      <a href="tuition.html">Tuition</a>
-      <a href="finance.html" class="active">Finances</a>
+      <nav class="page-nav">
+        <a href="index.html">&#127919; Savings Goal</a>
+        <a href="tuition.html">&#128218; Tuition Logger</a>
+        <a href="finance.html" class="active">&#128176; Finance Tracker</a>
+      </nav>
+
+      <div class="appbar-actions">
+        <button type="button" class="icon-ctrl" id="theme-toggle" aria-label="Switch between light and dark background" aria-pressed="false">
+          <span class="moon">&#9790;</span>
+          <span class="sun">&#9728;</span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="page-nav-mobile">
+      <a href="index.html">&#127919; Savings</a>
+      <a href="tuition.html">&#128218; Tuition</a>
+      <a href="finance.html" class="active">&#128176; Finance</a>
     </nav>
-    <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch between light and dark background" aria-pressed="false">
-      <span class="icon sun">&#9728;</span>
-      <span class="icon moon">&#9790;</span>
-      <span class="knob"></span>
-    </button>
+  </div>
+</header>
+
+<div class="sheet">
+  <div class="page-head">
+    <span class="eyebrow">Personal finances</span>
+    <h1>Income &amp; Expenses</h1>
+    <p class="spec-line">Salary, other income, and expenses &mdash; plus every paid tuition session, pulled in automatically.</p>
   </div>
 
   <section>
     <div class="card">
-      <div class="summary-grid">
+      <div class="stat-row summary-row" style="border-top:none;padding-top:0;margin-top:0;">
         <div class="stat">
-          <div class="v mono income" id="sum-income">&#8377;0</div>
           <div class="k">Income</div>
+          <div class="v mono income" id="sum-income">&#8377;0</div>
         </div>
         <div class="stat">
-          <div class="v mono expense" id="sum-expense">&#8377;0</div>
           <div class="k">Expenses</div>
+          <div class="v mono expense" id="sum-expense">&#8377;0</div>
         </div>
         <div class="stat">
-          <div class="v mono" id="sum-net">&#8377;0</div>
           <div class="k">Net</div>
+          <div class="v mono net" id="sum-net">&#8377;0</div>
         </div>
       </div>
       <div class="summary-note" id="summary-note"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h3>Income vs. expenses by month</h3>
+          <p class="chart-sub" id="finance-chart-sub">Money in against money out, month by month.</p>
+        </div>
+        <div class="chart-legend" data-chart-legend="finance-chart"></div>
+      </div>
+      <div id="finance-chart" style="margin-top:1rem;"></div>
+      <div class="chart-foot" id="finance-chart-foot"></div>
     </div>
   </section>
 
@@ -575,6 +363,7 @@
   </div>
 </div>
 
+<script src="charts.js"></script>
 <script>
 (function(){
   "use strict";
@@ -863,6 +652,56 @@
     });
   }
 
+  // ---- income vs. expense chart ----
+
+  var financeChart = PaisaChart.bar("finance-chart", {
+    ariaLabel: "Income and expenses by month",
+    emptyText: "No entries yet \u2014 add income or an expense above and the monthly bars appear here."
+  });
+
+  function renderFinanceChart(entries){
+    var latest = todayISO().slice(0, 7);
+    entries.forEach(function(e){
+      if (e.date && e.date.slice(0, 7) > latest) latest = e.date.slice(0, 7);
+    });
+    var year = Number(latest.slice(0, 4));
+    var month = Number(latest.slice(5, 7)) - 1;
+    var keys = [];
+    for (var i = 5; i >= 0; i--) {
+      var d = new Date(year, month - i, 1);
+      keys.push(d.getFullYear() + "-" + (d.getMonth() + 1 < 10 ? "0" : "") + (d.getMonth() + 1));
+    }
+
+    var inc = [], exp = [];
+    keys.forEach(function(ym){
+      var i2 = 0, e2 = 0;
+      entries.forEach(function(e){
+        if (!e.date || e.date.slice(0, 7) !== ym) return;
+        var amt = Number(e.amount) || 0;
+        if (e.type === "income") i2 += amt; else if (e.type === "expense") e2 += amt;
+      });
+      inc.push(i2);
+      exp.push(e2);
+    });
+
+    financeChart.setData({
+      categories: keys.map(function(ym){
+        var dt = new Date(ym + "-01T00:00:00");
+        return dt.toLocaleDateString("en-IN", { month: "short" }) + " " + String(dt.getFullYear()).slice(2);
+      }),
+      series: [
+        { name: "Income", color: "moss", values: inc },
+        { name: "Expenses", color: "rust", values: exp }
+      ]
+    });
+
+    var totalIn = inc.reduce(function(a, b){ return a + b; }, 0);
+    var totalOut = exp.reduce(function(a, b){ return a + b; }, 0);
+    $("finance-chart-foot").innerHTML = (totalIn || totalOut)
+      ? "Last six months: <strong>" + fmt(totalIn) + "</strong> in, <strong>" + fmt(totalOut) + "</strong> out, <strong>" + fmt(totalIn - totalOut) + "</strong> net."
+      : "Bars fill in as you log entries \u2014 income in green, expenses in red.";
+  }
+
   function render(){
     var entries = allEntries();
     var income = entries.reduce(function(s, e){ return e.type === "income" ? s + (Number(e.amount) || 0) : s; }, 0);
@@ -885,6 +724,7 @@
     renderColumn("income-list", incomeEntries, "income");
     renderColumn("expense-list", expenseEntries, "expense");
 
+    renderFinanceChart(entries);
     renderLoans();
   }
 
