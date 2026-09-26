@@ -243,20 +243,6 @@
   </section>
 
   <section>
-    <div class="chart-card">
-      <div class="chart-head">
-        <div>
-          <h3>Income vs. expenses by month</h3>
-          <p class="chart-sub" id="finance-chart-sub">Money in against money out, month by month.</p>
-        </div>
-        <div class="chart-legend" data-chart-legend="finance-chart"></div>
-      </div>
-      <div id="finance-chart" style="margin-top:1rem;"></div>
-      <div class="chart-foot" id="finance-chart-foot"></div>
-    </div>
-  </section>
-
-  <section>
     <h2>Add income or expense</h2>
     <div class="card">
       <div class="type-toggle" id="type-toggle">
@@ -363,7 +349,6 @@
   </div>
 </div>
 
-<script src="charts.js"></script>
 <script>
 (function(){
   "use strict";
@@ -652,56 +637,6 @@
     });
   }
 
-  // ---- income vs. expense chart ----
-
-  var financeChart = PaisaChart.bar("finance-chart", {
-    ariaLabel: "Income and expenses by month",
-    emptyText: "No entries yet \u2014 add income or an expense above and the monthly bars appear here."
-  });
-
-  function renderFinanceChart(entries){
-    var latest = todayISO().slice(0, 7);
-    entries.forEach(function(e){
-      if (e.date && e.date.slice(0, 7) > latest) latest = e.date.slice(0, 7);
-    });
-    var year = Number(latest.slice(0, 4));
-    var month = Number(latest.slice(5, 7)) - 1;
-    var keys = [];
-    for (var i = 5; i >= 0; i--) {
-      var d = new Date(year, month - i, 1);
-      keys.push(d.getFullYear() + "-" + (d.getMonth() + 1 < 10 ? "0" : "") + (d.getMonth() + 1));
-    }
-
-    var inc = [], exp = [];
-    keys.forEach(function(ym){
-      var i2 = 0, e2 = 0;
-      entries.forEach(function(e){
-        if (!e.date || e.date.slice(0, 7) !== ym) return;
-        var amt = Number(e.amount) || 0;
-        if (e.type === "income") i2 += amt; else if (e.type === "expense") e2 += amt;
-      });
-      inc.push(i2);
-      exp.push(e2);
-    });
-
-    financeChart.setData({
-      categories: keys.map(function(ym){
-        var dt = new Date(ym + "-01T00:00:00");
-        return dt.toLocaleDateString("en-IN", { month: "short" }) + " " + String(dt.getFullYear()).slice(2);
-      }),
-      series: [
-        { name: "Income", color: "moss", values: inc },
-        { name: "Expenses", color: "rust", values: exp }
-      ]
-    });
-
-    var totalIn = inc.reduce(function(a, b){ return a + b; }, 0);
-    var totalOut = exp.reduce(function(a, b){ return a + b; }, 0);
-    $("finance-chart-foot").innerHTML = (totalIn || totalOut)
-      ? "Last six months: <strong>" + fmt(totalIn) + "</strong> in, <strong>" + fmt(totalOut) + "</strong> out, <strong>" + fmt(totalIn - totalOut) + "</strong> net."
-      : "Bars fill in as you log entries \u2014 income in green, expenses in red.";
-  }
-
   function render(){
     var entries = allEntries();
     var income = entries.reduce(function(s, e){ return e.type === "income" ? s + (Number(e.amount) || 0) : s; }, 0);
@@ -724,7 +659,6 @@
     renderColumn("income-list", incomeEntries, "income");
     renderColumn("expense-list", expenseEntries, "expense");
 
-    renderFinanceChart(entries);
     renderLoans();
   }
 

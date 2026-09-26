@@ -426,41 +426,6 @@
   </section>
 
   <section>
-    <div class="chart-card">
-      <div class="chart-head">
-        <div>
-          <h3>Savings progress by month</h3>
-          <p class="chart-sub" id="savings-chart-sub">How much landed in hand each month, against what you earned but haven&rsquo;t been paid.</p>
-        </div>
-        <div class="chart-legend" data-chart-legend="savings-chart"></div>
-      </div>
-
-      <div class="chart-stats">
-        <div class="chart-stat">
-          <span class="k">Total received</span>
-          <span class="v moss mono" id="chart-total-received">&#8377;0</span>
-        </div>
-        <div class="chart-stat">
-          <span class="k">Still unpaid</span>
-          <span class="v gold mono" id="chart-total-unpaid">&#8377;0</span>
-        </div>
-        <div class="chart-stat">
-          <span class="k">Best month</span>
-          <span class="v blue mono" id="chart-best-month">&mdash;</span>
-        </div>
-        <div class="chart-stat">
-          <span class="k">Avg. received / month</span>
-          <span class="v mono" id="chart-avg-month">&#8377;0</span>
-        </div>
-      </div>
-
-      <div id="savings-chart"></div>
-
-      <div class="chart-foot" id="savings-chart-foot"></div>
-    </div>
-  </section>
-
-  <section>
     <h2>Timeline</h2>
     <div class="timeline">
       <div class="step">
@@ -524,7 +489,6 @@
   </div>
 </div>
 
-<script src="charts.js"></script>
 <script>
 (function(){
   "use strict";
@@ -683,96 +647,6 @@
     select.value = viewMonth;
   }
 
-  // ---- savings progress bar chart ----
-
-  var savingsChart = PaisaChart.bar("savings-chart", {
-    ariaLabel: "Savings received and still unpaid, by month",
-    emptyText: "No entries yet — log an earning above and the monthly bars appear here."
-  });
-
-  // Last 6 months ending at the latest month that has an entry (today if none).
-  function recentMonthKeys(count){
-    var latest = todayISO().slice(0, 7);
-    state.entries.forEach(function(e){
-      if (e.date && e.date.slice(0, 7) > latest) latest = e.date.slice(0, 7);
-    });
-    var year = Number(latest.slice(0, 4));
-    var month = Number(latest.slice(5, 7)) - 1; // 0-indexed
-    var keys = [];
-    for (var i = count - 1; i >= 0; i--) {
-      var d = new Date(year, month - i, 1);
-      keys.push(d.getFullYear() + "-" + (d.getMonth() + 1 < 10 ? "0" : "") + (d.getMonth() + 1));
-    }
-    return keys;
-  }
-
-  function shortMonthLabel(ym){
-    var d = new Date(ym + "-01T00:00:00");
-    if (isNaN(d.getTime())) return ym;
-    return d.toLocaleDateString("en-IN", { month: "short" }) + " " + String(d.getFullYear()).slice(2);
-  }
-
-  function renderSavingsChart(){
-    var months = recentMonthKeys(6);
-    var received = [];
-    var unpaid = [];
-
-    months.forEach(function(ym){
-      var r = 0, u = 0;
-      state.entries.forEach(function(e){
-        if (!e.date || e.date.slice(0, 7) !== ym) return;
-        var amt = Number(e.amount) || 0;
-        if (e.status === "received") r += amt; else u += amt;
-      });
-      received.push(r);
-      unpaid.push(u);
-    });
-
-    savingsChart.setData({
-      categories: months.map(shortMonthLabel),
-      series: [
-        { name: "Received", color: "moss", values: received },
-        { name: "Earned, unpaid", color: "gold", values: unpaid }
-      ]
-    });
-
-    var totalReceived = received.reduce(function(s, v){ return s + v; }, 0);
-    var totalUnpaid = unpaid.reduce(function(s, v){ return s + v; }, 0);
-
-    var bestIdx = -1;
-    received.forEach(function(v, i){
-      if (v > 0 && (bestIdx === -1 || v > received[bestIdx])) bestIdx = i;
-    });
-    var monthsWithMoney = received.filter(function(v){ return v > 0; }).length;
-
-    $("chart-total-received").textContent = fmt(totalReceived);
-    $("chart-total-unpaid").textContent = fmt(totalUnpaid);
-    $("chart-best-month").textContent = bestIdx === -1
-      ? "—"
-      : shortMonthLabel(months[bestIdx]) + " · " + fmt(received[bestIdx]);
-    $("chart-avg-month").textContent = monthsWithMoney
-      ? fmt(totalReceived / monthsWithMoney)
-      : fmt(0);
-
-    $("savings-chart-sub").textContent =
-      "Six months to " + monthLabel(months[months.length - 1]) + " · received vs. earned-but-unpaid.";
-
-    var target = Number(state.target) || 0;
-    var saved = receivedTotal();
-    var remaining = Math.max(0, target - saved);
-    var foot = $("savings-chart-foot");
-    if (!totalReceived && !totalUnpaid) {
-      foot.textContent = "Bars fill in as you log entries — received in green, earned-but-unpaid in amber.";
-    } else if (remaining <= 0) {
-      foot.innerHTML = "Target met — you've banked <strong>" + fmt(saved) + "</strong> against a " + fmt(target) + " goal.";
-    } else {
-      var avg = monthsWithMoney ? totalReceived / monthsWithMoney : 0;
-      foot.innerHTML = avg > 0
-        ? "At <strong>" + fmt(avg) + "/month</strong> received, the remaining <strong>" + fmt(remaining) + "</strong> takes about <strong>" + Math.ceil(remaining / avg) + " more month" + (Math.ceil(remaining / avg) === 1 ? "" : "s") + "</strong>."
-        : "Still <strong>" + fmt(remaining) + "</strong> to go toward the " + fmt(target) + " target.";
-    }
-  }
-
   function render(){
     var targetEl = $("target-input");
     var dateEl = $("target-date-input");
@@ -863,8 +737,6 @@
         '<div class="label">Total earned</div><div class="val">' + fmt(monthEarned) + '</div>';
       ledgerBody.appendChild(summaryRow);
     }
-
-    renderSavingsChart();
 
     renderPrice("amazon");
     renderPrice("flipkart");
