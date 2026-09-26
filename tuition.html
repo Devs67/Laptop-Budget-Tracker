@@ -389,6 +389,17 @@
     margin-top:2.5rem;
   }
   .disclaimer p{ margin:.35rem 0; }
+
+  section{ scroll-margin-top:100px; }
+  .quick-actions{
+    display:flex;
+    gap:.6rem;
+    margin-bottom:1.5rem;
+  }
+  .quick-actions .btn{ flex:1; padding:.65rem 1.1rem; font-size:.875rem; }
+  @media (min-width:560px){
+    .quick-actions .btn{ flex:none; }
+  }
 </style>
 
 <header class="appbar">
@@ -430,6 +441,11 @@
     <span class="eyebrow">Tuition log</span>
     <h1>Sessions &amp; Invoices</h1>
     <p class="spec-line">Log each class as it happens, then click a student to see their sessions, totals, and invoice.</p>
+  </div>
+
+  <div class="quick-actions">
+    <button type="button" class="btn" id="qa-log">+ Log session</button>
+    <button type="button" class="btn ghost" id="qa-student">+ Add student</button>
   </div>
 
   <section>
@@ -1286,6 +1302,18 @@
     saveSheetConfig(url, token);
     pullFromSheet();
   });
+
+  // ---- quick actions ----
+
+  function jumpTo(fieldId){
+    var field = $(fieldId);
+    var section = field.closest("section");
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    section.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    field.focus({ preventScroll: true });
+  }
+  $("qa-log").addEventListener("click", function(){ jumpTo("entry-child"); });
+  $("qa-student").addEventListener("click", function(){ jumpTo("new-child-name"); });
 
   // ---- init ----
 
