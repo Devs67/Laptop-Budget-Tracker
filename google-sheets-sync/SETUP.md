@@ -40,7 +40,12 @@ blank/zero entries instead of an error.
    ```
    id   loanId   date   amount   note
    ```
-7. Leave all five tabs otherwise empty — the pages will populate them.
+7. Add a sixth tab named `Payments` (money received from a student's parent). In row 1, enter
+   these headers exactly:
+   ```
+   id   childId   date   amount   note
+   ```
+8. Leave all six tabs otherwise empty — the pages will populate them.
 
 ## 2. Add the script
 
@@ -85,9 +90,10 @@ edit (pencil) → New version → Deploy** to update the existing URL in place.
 
 ## Already deployed and adding a newer feature?
 
-Anytime a page gains a feature that needs new sheet tabs (Finance, then later Loans), do this once:
+Anytime a page gains a feature that needs new sheet tabs (Finance, then Loans, then Payments), do
+this once:
 
-1. Add whichever tabs you're missing (steps 4–6 above) with those exact headers.
+1. Add whichever tabs you're missing (steps 4–7 above) with those exact headers.
 2. In the Apps Script editor, replace the contents of `Code.gs` with the current version from
    this folder.
 3. **Deploy → Manage deployments → pencil icon → New version → Deploy.** Same URL, same token —

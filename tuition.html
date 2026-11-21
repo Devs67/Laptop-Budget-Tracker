@@ -123,6 +123,51 @@
   .student-detail .detail-totals .k{ font-size:.68rem; text-transform:uppercase; letter-spacing:.05em; color:var(--slate); }
   .student-detail .detail-totals .v{ font-weight:700; font-size:1.05rem; }
   .student-detail .detail-totals .v.owed{ color:var(--gold); }
+  .student-detail .detail-totals .v.credit{ color:var(--moss); }
+
+  .pay-box{
+    margin-bottom:1.1rem;
+    padding-bottom:1rem;
+    border-bottom:1px solid var(--rule);
+  }
+  .pay-box .pay-title{
+    font-size:.78rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--slate);
+    margin-bottom:.6rem;
+  }
+  .pay-form{ display:flex; flex-direction:column; gap:.6rem; }
+  .pay-form .btn{ width:100%; }
+  @media (min-width:560px){
+    .pay-form{ flex-direction:row; flex-wrap:wrap; }
+    .pay-form #pay-amount{ width:8rem; }
+    .pay-form #pay-date{ width:10rem; }
+    .pay-form #pay-note{ flex:1; min-width:8rem; }
+    .pay-form .btn{ width:auto; }
+  }
+  .pay-list{ display:flex; flex-direction:column; gap:.4rem; margin-top:.8rem; }
+  .pay-list .empty{ font-size:.82rem; color:var(--slate); font-style:italic; }
+  .pay-row{
+    display:flex;
+    align-items:center;
+    gap:.7rem;
+    font-size:.85rem;
+    background:var(--paper);
+    border:1px solid var(--rule);
+    border-left:4px solid var(--moss);
+    border-radius:10px;
+    padding:.4rem .5rem .4rem .9rem;
+  }
+  .pay-row .pay-note{ flex:1; min-width:0; color:var(--slate); word-break:break-word; }
+  @media (max-width:559px){
+    .pay-row{ flex-wrap:wrap; row-gap:.1rem; }
+    .pay-row .pay-date{ flex:1; }
+    .pay-row .pay-note{ order:3; flex-basis:100%; }
+    .pay-row .pay-note:empty{ display:none; }
+  }
+  .pay-row .amount{ font-weight:700; white-space:nowrap; }
   .student-detail .detail-actions{
     display:flex;
     justify-content:space-between;
@@ -177,8 +222,7 @@
   .paid-pill.paid{ background:var(--moss-soft); color:var(--moss); }
   .row-actions{ display:flex; gap:.3rem; white-space:nowrap; }
   .icon-btn{ background:none; border:none; cursor:pointer; font-size:.76rem; padding:.4rem .4rem; font-weight:600; min-height:34px; }
-  .icon-btn.mark{ color:var(--moss); }
-  .icon-btn.remove{ color:var(--rust); }
+  .icon-btn.remove, .icon-btn.remove-pay{ color:var(--rust); }
   @media (hover:hover) and (pointer:fine){
     .icon-btn:hover{ text-decoration:underline; }
   }
@@ -541,7 +585,8 @@
 
   <div class="disclaimer">
     <p><strong>How this page works.</strong> Data is cached in this browser only, separate from the savings ledger page. "Owed" money logged here isn't automatically added to that page's earnings log &mdash; add it there yourself once a student actually pays.</p>
-    <p><strong>Invoices</strong> list a student's unpaid sessions. Generating one doesn't mark anything as paid on its own &mdash; use "Mark these sessions as paid" inside the invoice once you've actually been paid.</p>
+    <p><strong>Payments.</strong> Enter what a parent hands you under "Received from parent" in that student's panel. It's applied to their oldest unpaid sessions first, so the page can show which sessions are covered and how much you're still to get. Sessions you marked paid before this existed stay counted as paid.</p>
+    <p><strong>Invoices</strong> list only what's still to get &mdash; sessions not yet covered by a payment, with any part-paid session showing just its remaining amount.</p>
   </div>
 </div>
 
@@ -575,7 +620,6 @@
     </table>
     <div class="invoice-actions no-print">
       <button class="btn ghost" id="invoice-close">Close</button>
-      <button class="btn ghost" id="invoice-mark-paid">Mark these sessions as paid</button>
       <button class="btn" id="invoice-print">Print / Save as PDF</button>
     </div>
   </div>
@@ -595,14 +639,16 @@
   var DEFAULT_STATE = {
     invoiceFrom: "",
     children: [],
-    entries: []
+    entries: [],
+    payments: []
   };
 
   function cloneDefault(){
     return {
       invoiceFrom: DEFAULT_STATE.invoiceFrom,
       children: DEFAULT_STATE.children.map(function(c){ return Object.assign({}, c); }),
-      entries: []
+      entries: [],
+      payments: []
     };
   }
 
@@ -616,6 +662,7 @@
           if (typeof saved.invoiceFrom === "string") state.invoiceFrom = saved.invoiceFrom;
           if (Array.isArray(saved.children) && saved.children.length) state.children = saved.children;
           if (Array.isArray(saved.entries)) state.entries = saved.entries;
+          if (Array.isArray(saved.payments)) state.payments = saved.payments;
           return state;
         }
       }
@@ -845,6 +892,17 @@
           };
         });
       }
+      if (Array.isArray(data.payments)) {
+        state.payments = data.payments.map(function(p){
+          return {
+            id: String(p.id),
+            childId: String(p.childId),
+            date: normalizeDate(p.date),
+            amount: Number(p.amount) || 0,
+            note: p.note ? String(p.note) : ""
+          };
+        });
+      }
       if (!selectedChildId || !childById(selectedChildId)) {
         selectedChildId = state.children.length ? state.children[0].id : null;
       }
@@ -863,11 +921,46 @@
     return null;
   }
 
+  // Money received from a parent is applied to that student's oldest sessions
+  // first. Sessions marked paid before payments existed (entry.paid) count as
+  // already settled. `due` maps each session id to what's still to get on it.
   function childTotals(childId){
     var sessions = state.entries.filter(function(e){ return e.childId === childId; });
-    var billed = sessions.reduce(function(s, e){ return s + (Number(e.amount) || 0); }, 0);
-    var paid = sessions.reduce(function(s, e){ return e.paid ? s + (Number(e.amount) || 0) : s; }, 0);
-    return { sessions: sessions, count: sessions.length, billed: billed, paid: paid, owed: billed - paid };
+    var payments = state.payments.filter(function(p){ return p.childId === childId; });
+    var billed = 0, legacyPaid = 0;
+    sessions.forEach(function(e){
+      var a = Number(e.amount) || 0;
+      billed += a;
+      if (e.paid) legacyPaid += a;
+    });
+    var pool = payments.reduce(function(s, p){ return s + (Number(p.amount) || 0); }, 0);
+    var received = legacyPaid + pool;
+    var due = {};
+    sessions.slice()
+      .sort(function(a, b){ return (a.date + a.time).localeCompare(b.date + b.time); })
+      .forEach(function(e){
+        var a = Number(e.amount) || 0;
+        if (e.paid) { due[e.id] = 0; return; }
+        var applied = Math.min(pool, a);
+        pool -= applied;
+        due[e.id] = a - applied;
+      });
+    var balance = billed - received;
+    return {
+      sessions: sessions, payments: payments, count: sessions.length,
+      billed: billed, received: received,
+      owed: Math.max(0, balance), credit: Math.max(0, -balance), due: due
+    };
+  }
+
+  function allDues(){
+    var due = {}, seen = {};
+    state.entries.forEach(function(e){
+      if (seen[e.childId]) return;
+      seen[e.childId] = true;
+      Object.assign(due, childTotals(e.childId).due);
+    });
+    return due;
   }
 
   function renderChildSelect(){
@@ -899,7 +992,8 @@
       btn.innerHTML =
         '<span class="name">' + escapeHtml(child.name) + '</span>' +
         '<span class="owed' + (totals.owed > 0 ? "" : " zero") + '">' +
-          (totals.owed > 0 ? fmt(totals.owed) + " owed" : "all paid up") +
+          (totals.owed > 0 ? fmt(totals.owed) + " to get"
+            : totals.credit > 0 ? fmt(totals.credit) + " in advance" : "all paid up") +
         '</span>';
       wrap.appendChild(btn);
     });
@@ -919,6 +1013,12 @@
       .filter(function(e){ return e.date.slice(0, 7) === calMonthKey; })
       .sort(function(a, b){ return (b.date + b.time).localeCompare(a.date + a.time); });
 
+    // Keep anything typed in the payment form when a background sync re-renders.
+    var prevPay = null;
+    if ($("pay-amount") && container.getAttribute("data-child") === child.id) {
+      prevPay = { amount: $("pay-amount").value, date: $("pay-date").value, note: $("pay-note").value };
+    }
+
     var rowsHtml = "";
     if (!sorted.length) {
       rowsHtml = totals.sessions.length
@@ -926,8 +1026,13 @@
         : '<div class="empty">No sessions logged for ' + escapeHtml(child.name) + ' yet.</div>';
     } else {
       sorted.forEach(function(entry){
+        var left = totals.due[entry.id] || 0;
+        var amt = Number(entry.amount) || 0;
+        var pill = left <= 0 ? '<div class="paid-pill paid">Paid</div>'
+          : left < amt ? '<div class="paid-pill owed">' + fmt(left) + ' left</div>'
+          : '<div class="paid-pill owed">Owed</div>';
         rowsHtml +=
-          '<div class="row ' + (entry.paid ? "is-paid" : "is-owed") + '">' +
+          '<div class="row ' + (left <= 0 ? "is-paid" : "is-owed") + '">' +
             '<div class="row-main">' +
               '<div class="row-top">' +
                 '<span class="mono">' + fmtDate(entry.date) + '</span>' +
@@ -938,9 +1043,8 @@
             '</div>' +
             '<div class="row-side">' +
               '<div class="amount mono">' + fmt(entry.amount) + '</div>' +
-              '<div class="paid-pill ' + (entry.paid ? "paid" : "owed") + '">' + (entry.paid ? "Paid" : "Owed") + '</div>' +
+              pill +
               '<div class="row-actions">' +
-                (entry.paid ? "" : '<button class="icon-btn mark" data-id="' + entry.id + '">Mark paid</button>') +
                 '<button class="icon-btn remove" data-id="' + entry.id + '">Remove</button>' +
               '</div>' +
             '</div>' +
@@ -948,6 +1052,23 @@
       });
     }
 
+    var payHtml = "";
+    var paySorted = totals.payments.slice().sort(function(a, b){ return b.date.localeCompare(a.date); });
+    if (!paySorted.length) {
+      payHtml = '<div class="empty">Nothing received yet.</div>';
+    } else {
+      paySorted.forEach(function(p){
+        payHtml +=
+          '<div class="pay-row">' +
+            '<span class="mono pay-date">' + fmtDate(p.date) + '</span>' +
+            '<span class="pay-note">' + (p.note ? escapeHtml(p.note) : "") + '</span>' +
+            '<span class="amount mono">' + fmt(p.amount) + '</span>' +
+            '<button class="icon-btn remove-pay" data-id="' + p.id + '">Remove</button>' +
+          '</div>';
+      });
+    }
+
+    container.setAttribute("data-child", child.id);
     container.innerHTML =
       '<div class="student-detail card">' +
         '<div class="detail-head">' +
@@ -957,8 +1078,20 @@
         '<div class="detail-totals">' +
           '<div><div class="k">Sessions</div><div class="v mono">' + totals.count + '</div></div>' +
           '<div><div class="k">Billed</div><div class="v mono">' + fmt(totals.billed) + '</div></div>' +
-          '<div><div class="k">Paid</div><div class="v mono">' + fmt(totals.paid) + '</div></div>' +
-          '<div><div class="k">Owed</div><div class="v mono owed">' + fmt(totals.owed) + '</div></div>' +
+          '<div><div class="k">Received</div><div class="v mono">' + fmt(totals.received) + '</div></div>' +
+          (totals.credit > 0
+            ? '<div><div class="k">Paid in advance</div><div class="v mono credit">' + fmt(totals.credit) + '</div></div>'
+            : '<div><div class="k">Still to get</div><div class="v mono owed">' + fmt(totals.owed) + '</div></div>') +
+        '</div>' +
+        '<div class="pay-box">' +
+          '<div class="pay-title">Received from parent</div>' +
+          '<div class="pay-form">' +
+            '<input type="number" class="mono" id="pay-amount" min="0" step="50" placeholder="' + RUPEE + ' amount" aria-label="Amount received" />' +
+            '<input type="date" id="pay-date" aria-label="Date received" />' +
+            '<input type="text" id="pay-note" placeholder="Note (optional)" aria-label="Payment note" />' +
+            '<button class="btn small" id="pay-add">Add payment</button>' +
+          '</div>' +
+          '<div class="pay-list">' + payHtml + '</div>' +
         '</div>' +
         '<div class="cal-nav">' +
           '<button type="button" class="cal-prev" aria-label="Previous month">&#8249;</button>' +
@@ -976,6 +1109,13 @@
           '<button class="btn small" id="detail-invoice-btn">Generate invoice</button>' +
         '</div>' +
       '</div>';
+
+    $("pay-date").value = todayISO();
+    if (prevPay) {
+      $("pay-amount").value = prevPay.amount;
+      $("pay-date").value = prevPay.date || todayISO();
+      $("pay-note").value = prevPay.note;
+    }
   }
 
   function renderAllCalendar(){
@@ -986,16 +1126,17 @@
 
   function renderWeekSummary(){
     var monthKey = monthKeyFor(allCalOffset);
+    var due = allDues();
 
     var weeks = {};
     state.entries.forEach(function(entry){
       if (!entry.date || entry.date.slice(0, 7) !== monthKey) return;
       var mon = mondayOf(entry.date);
       var key = isoFromDate(mon);
-      if (!weeks[key]) weeks[key] = { mondayDate: mon, sessions: [], billed: 0, paid: 0 };
+      if (!weeks[key]) weeks[key] = { mondayDate: mon, sessions: [], billed: 0, owed: 0 };
       weeks[key].sessions.push(entry);
       weeks[key].billed += Number(entry.amount) || 0;
-      if (entry.paid) weeks[key].paid += Number(entry.amount) || 0;
+      weeks[key].owed += due[entry.id] || 0;
     });
 
     var keys = Object.keys(weeks).sort().reverse();
@@ -1008,7 +1149,7 @@
     }
     keys.forEach(function(key){
       var w = weeks[key];
-      var owed = w.billed - w.paid;
+      var owed = w.owed;
       var row = document.createElement("div");
       row.className = "week-row" + (key === currentWeekKey ? " current" : "");
       row.innerHTML =
@@ -1034,14 +1175,15 @@
     var monthKey = monthKeyFor(allCalOffset);
     var grand = { count: 0, billed: 0, paid: 0, owed: 0 };
     var studentIds = {};
+    var due = allDues();
     state.entries.forEach(function(entry){
       if (!entry.date || entry.date.slice(0, 7) !== monthKey) return;
       grand.count++;
       grand.billed += Number(entry.amount) || 0;
-      if (entry.paid) grand.paid += Number(entry.amount) || 0;
+      grand.owed += due[entry.id] || 0;
       studentIds[entry.childId] = true;
     });
-    grand.owed = grand.billed - grand.paid;
+    grand.paid = grand.billed - grand.owed;
     var studentCount = Object.keys(studentIds).length;
     $("grand-total-line").innerHTML =
       grand.count + " " + (grand.count === 1 ? "session" : "sessions") + " logged across " +
@@ -1101,7 +1243,8 @@
   });
 
   $("student-detail").addEventListener("click", function(e){
-    var markBtn = e.target.closest ? e.target.closest(".icon-btn.mark") : null;
+    var payAddBtn = e.target.closest ? e.target.closest("#pay-add") : null;
+    var removePayBtn = e.target.closest ? e.target.closest(".icon-btn.remove-pay") : null;
     var removeBtn = e.target.closest ? e.target.closest(".icon-btn.remove:not(#remove-student)") : null;
     var removeStudentBtn = e.target.closest ? e.target.closest("#remove-student") : null;
     var invoiceBtn = e.target.closest ? e.target.closest("#detail-invoice-btn") : null;
@@ -1111,13 +1254,31 @@
     if (calPrevBtn) { studentCalOffset--; renderStudentDetail(); return; }
     if (calNextBtn) { studentCalOffset++; renderStudentDetail(); return; }
 
-    if (markBtn) {
-      var id = markBtn.getAttribute("data-id");
-      var markedEntry = null;
-      state.entries.forEach(function(entry){ if (entry.id === id) { entry.paid = true; markedEntry = entry; } });
+    if (payAddBtn) {
+      var payAmountEl = $("pay-amount");
+      var payAmount = Number(payAmountEl.value);
+      if (!payAmount || payAmount <= 0) { payAmountEl.focus(); return; }
+      var newPayment = {
+        id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+        childId: selectedChildId,
+        date: $("pay-date").value || todayISO(),
+        amount: payAmount,
+        note: ($("pay-note").value || "").slice(0, 80)
+      };
+      state.payments.push(newPayment);
+      payAmountEl.value = "";
+      $("pay-note").value = "";
       saveState();
       render();
-      if (markedEntry) syncAction("updateSession", markedEntry);
+      syncAction("addPayment", newPayment);
+      return;
+    }
+    if (removePayBtn) {
+      var pid = removePayBtn.getAttribute("data-id");
+      state.payments = state.payments.filter(function(p){ return p.id !== pid; });
+      saveState();
+      render();
+      syncAction("deletePayment", { id: pid });
       return;
     }
     if (removeBtn) {
@@ -1197,14 +1358,12 @@
 
   // ---- invoice ----
 
-  var invoiceChildId = null;
-
   function openInvoice(childId){
     var child = childById(childId);
     if (!child) return;
-    invoiceChildId = childId;
 
-    var unpaid = state.entries.filter(function(e){ return e.childId === childId && !e.paid; })
+    var due = childTotals(childId).due;
+    var unpaid = state.entries.filter(function(e){ return e.childId === childId && due[e.id] > 0; })
       .sort(function(a, b){ return (a.date + a.time).localeCompare(b.date + b.time); });
 
     $("invoice-number").textContent = "INV-" + child.id.toUpperCase().slice(0, 4) + "-" + todayISO().replace(/-/g, "");
@@ -1219,19 +1378,22 @@
       rows.innerHTML = '<tr><td colspan="5" class="invoice-empty">No unpaid sessions for ' + escapeHtml(child.name) + '.</td></tr>';
     } else {
       unpaid.forEach(function(entry){
-        total += Number(entry.amount) || 0;
+        var left = due[entry.id];
+        var partly = left < (Number(entry.amount) || 0);
+        total += left;
+        var noteText = (entry.note ? escapeHtml(entry.note) : "") +
+          (partly ? (entry.note ? " &middot; " : "") + "balance of " + fmt(entry.amount) : "");
         var tr = document.createElement("tr");
         tr.innerHTML =
           "<td>" + fmtDate(entry.date) + "</td>" +
           "<td>" + fmtTime(entry.time) + "</td>" +
           "<td>" + fmtDuration(entry.durationMinutes) + "</td>" +
-          "<td>" + (entry.note ? escapeHtml(entry.note) : "&nbsp;") + "</td>" +
-          '<td class="num">' + fmt(entry.amount) + "</td>";
+          "<td>" + (noteText || "&nbsp;") + "</td>" +
+          '<td class="num">' + fmt(left) + "</td>";
         rows.appendChild(tr);
       });
     }
     $("invoice-total").textContent = fmt(total);
-    $("invoice-mark-paid").disabled = !unpaid.length;
 
     $("invoice-overlay").hidden = false;
     var panel = $("invoice-panel");
@@ -1243,7 +1405,6 @@
   function closeInvoiceOverlay(){
     $("invoice-overlay").hidden = true;
     $("invoice-panel").classList.remove("is-visible");
-    invoiceChildId = null;
   }
 
   $("invoice-close").addEventListener("click", closeInvoiceOverlay);
@@ -1254,21 +1415,6 @@
 
   $("invoice-print").addEventListener("click", function(){
     window.print();
-  });
-
-  $("invoice-mark-paid").addEventListener("click", function(){
-    if (!invoiceChildId) return;
-    var justPaid = [];
-    state.entries.forEach(function(entry){
-      if (entry.childId === invoiceChildId && !entry.paid) {
-        entry.paid = true;
-        justPaid.push(entry);
-      }
-    });
-    saveState();
-    render();
-    closeInvoiceOverlay();
-    justPaid.forEach(function(entry){ syncAction("updateSession", entry); });
   });
 
   // ---- theme (shared with savings ledger page) ----

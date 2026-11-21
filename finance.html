@@ -180,7 +180,7 @@
   <div class="page-head">
     <span class="eyebrow">Personal finances</span>
     <h1>Income &amp; Expenses</h1>
-    <p class="spec-line">Salary, other income, and expenses &mdash; plus every paid tuition session, pulled in automatically.</p>
+    <p class="spec-line">Salary, other income, and expenses &mdash; plus tuition money you've received, pulled in automatically.</p>
   </div>
 
   <section>
@@ -295,7 +295,7 @@
   </section>
 
   <div class="disclaimer">
-    <p><strong>How this works.</strong> Manual entries here sync to the same Google Sheet as your Tuition log (a "Finance" tab, plus "Loans" and "LoanPayments" for the section above). Every <em>paid</em> tuition session shows up in Income automatically, tagged "Tuition" &mdash; they're read-only here; edit or unmark them on the Tuition page instead.</p>
+    <p><strong>How this works.</strong> Manual entries here sync to the same Google Sheet as your Tuition log (a "Finance" tab, plus "Loans" and "LoanPayments" for the section above). Every payment you record under "Received from parent" on the Tuition page (and any session marked paid before that existed) shows up in Income automatically, tagged "Tuition" &mdash; they're read-only here; change them on the Tuition page instead.</p>
     <p>If sync isn't connected, entries still save to this browser, but won't show up on other devices until you connect Google Sheet sync (see google-sheets-sync/SETUP.md).</p>
   </div>
 </div>
@@ -441,6 +441,8 @@
       if (Array.isArray(data.sessions)) {
         var byChild = {};
         (data.students || []).forEach(function(s){ byChild[String(s.id)] = String(s.name); });
+        // Sessions marked paid before "Received from parent" existed, plus
+        // every payment received since.
         tuitionIncome = data.sessions
           .filter(function(s){ return s.paid === true || s.paid === "TRUE" || s.paid === "true"; })
           .map(function(s){
@@ -454,7 +456,19 @@
               note: s.note ? String(s.note) : "",
               source: "tuition"
             };
-          });
+          })
+          .concat((data.payments || []).map(function(p){
+            var childName = byChild[String(p.childId)] || "Student";
+            return {
+              id: "tuition-pay-" + p.id,
+              date: normalizeDate(p.date),
+              type: "income",
+              category: "Tuition — " + childName,
+              amount: Number(p.amount) || 0,
+              note: p.note ? String(p.note) : "",
+              source: "tuition"
+            };
+          }));
       }
       if (Array.isArray(data.loans)) {
         state.loans = data.loans.map(function(l){
@@ -585,8 +599,8 @@
     $("sum-expense").textContent = fmt(expense);
     $("sum-net").textContent = fmt(income - expense);
     $("summary-note").textContent = tuitionTotal > 0
-      ? "Includes " + fmt(tuitionTotal) + " from paid tuition sessions."
-      : "No paid tuition sessions yet.";
+      ? "Includes " + fmt(tuitionTotal) + " of tuition received."
+      : "No tuition received yet.";
 
     $("entry-count").textContent = entries.length ? "(" + entries.length + ")" : "";
 

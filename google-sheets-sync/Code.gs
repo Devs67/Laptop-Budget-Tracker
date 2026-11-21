@@ -20,6 +20,7 @@ var SESSIONS_SHEET = "Sessions";
 var FINANCE_SHEET = "Finance";
 var LOANS_SHEET = "Loans";
 var LOAN_PAYMENTS_SHEET = "LoanPayments";
+var PAYMENTS_SHEET = "Payments";
 var USERS_SHEET = "Users";
 var SESSION_FIELDS = ["id", "childId", "date", "time", "durationMinutes", "amount", "note", "paid"];
 var FINANCE_FIELDS = ["id", "date", "type", "category", "amount", "note"];
@@ -241,7 +242,9 @@ function doGet(e) {
     try { loans = sheetToObjects_(getSheet_(LOANS_SHEET), user); } catch (le) { loans = []; }
     var loanPayments = [];
     try { loanPayments = sheetToObjects_(getSheet_(LOAN_PAYMENTS_SHEET), user); } catch (lpe) { loanPayments = []; }
-    return jsonOut_({ ok: true, user: user, students: students, sessions: sessions, finance: finance, loans: loans, loanPayments: loanPayments });
+    var payments = [];
+    try { payments = sheetToObjects_(getSheet_(PAYMENTS_SHEET), user); } catch (pe) { payments = []; }
+    return jsonOut_({ ok: true, user: user, students: students, sessions: sessions, finance: finance, loans: loans, loanPayments: loanPayments, payments: payments });
   } catch (err) {
     return jsonOut_({ ok: false, error: String(err) });
   }
@@ -341,6 +344,15 @@ function doPost(e) {
       var shDLP = getSheet_(LOAN_PAYMENTS_SHEET);
       var rowDLP = findRowIndexById_(shDLP, payload.id, user);
       if (rowDLP !== -1) shDLP.deleteRow(rowDLP);
+    } else if (action === "addPayment") {
+      var shAP = getSheet_(PAYMENTS_SHEET);
+      var newRowP = appendOwnedRow_(shAP, [payload.id, payload.childId, "", payload.amount, payload.note], user);
+      shAP.getRange(newRowP, 3).setNumberFormat("@");
+      shAP.getRange(newRowP, 3).setValue(String(payload.date || ""));
+    } else if (action === "deletePayment") {
+      var shDP = getSheet_(PAYMENTS_SHEET);
+      var rowDP = findRowIndexById_(shDP, payload.id, user);
+      if (rowDP !== -1) shDP.deleteRow(rowDP);
     } else {
       return jsonOut_({ ok: false, error: "unknown action" });
     }
