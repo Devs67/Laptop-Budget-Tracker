@@ -363,7 +363,7 @@
 
   #invoice-panel{
     background:#FFFFFF;
-    color:#1C2B22;
+    color:#000000;
     width:100%;
     max-width:600px;
     border-radius:10px;
@@ -382,12 +382,12 @@
     display:flex;
     justify-content:space-between;
     align-items:flex-start;
-    border-bottom:2px solid #1C2B22;
+    border-bottom:2px solid #000000;
     padding-bottom:1rem;
     margin-bottom:1.2rem;
   }
-  #invoice-panel .invoice-head h2{ margin:0; font-size:1.4rem; letter-spacing:.05em; color:#1C2B22; }
-  #invoice-panel .invoice-meta{ font-size:.8rem; color:#5B6856; text-align:right; }
+  #invoice-panel .invoice-head h2{ margin:0; font-size:1.4rem; letter-spacing:.05em; color:#000000; }
+  #invoice-panel .invoice-meta{ font-size:.8rem; color:#000000; text-align:right; }
   #invoice-panel .parties{
     display:flex;
     justify-content:space-between;
@@ -395,33 +395,40 @@
     margin-bottom:1.4rem;
     font-size:.88rem;
   }
-  #invoice-panel .parties .label{ font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:#5B6856; margin-bottom:.2rem; }
+  #invoice-panel .parties .label{ font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:#000000; margin-bottom:.2rem; }
   #invoice-panel table{ width:100%; border-collapse:collapse; margin-bottom:1rem; font-size:.88rem; }
-  #invoice-panel th, #invoice-panel td{ text-align:left; padding:.5rem .4rem; border-bottom:1px solid #DCD3B8; }
-  #invoice-panel th{ color:#5B6856; font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; }
+  #invoice-panel th, #invoice-panel td{ text-align:left; padding:.5rem .4rem; border-bottom:1px solid #999999; }
+  #invoice-panel th{ color:#000000; font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; }
   #invoice-panel td.num{ text-align:right; }
-  #invoice-panel .total-row td{ font-weight:700; border-top:2px solid #1C2B22; border-bottom:none; font-size:1.05rem; }
+  #invoice-panel .total-row td{ font-weight:700; border-top:2px solid #000000; border-bottom:none; font-size:1.05rem; }
   #invoice-panel .invoice-actions{
     display:flex;
     justify-content:flex-end;
     gap:.6rem;
     margin-top:1.5rem;
   }
-  #invoice-panel .invoice-empty{ font-size:.88rem; color:#5B6856; font-style:italic; padding:1rem 0; }
+  #invoice-panel .invoice-empty{ font-size:.88rem; color:#000000; font-style:italic; padding:1rem 0; }
+  #invoice-panel .inv-label{ font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#000000; margin:.4rem 0 .1rem; }
+  #invoice-panel .inv-summary{ max-width:360px; margin-left:auto; }
+  #invoice-panel .inv-summary td{ border-bottom:none; padding:.35rem .4rem; }
 
   @media print{
-    body *{ visibility:hidden; }
-    #invoice-panel, #invoice-panel *{ visibility:visible; }
+    /* display:none (not visibility:hidden) so the rest of the page takes no
+       space and the PDF is only as long as the invoice itself. */
+    body > *:not(#invoice-overlay){ display:none !important; }
+    @page{ margin:12mm; }
+    body{ background:#FFFFFF; }
     #invoice-panel{
-      position:absolute;
-      top:0;
-      left:0;
       width:100%;
       max-width:none;
+      padding:0;
       box-shadow:none;
       border-radius:0;
+      opacity:1;
+      transform:none;
     }
-    .overlay{ position:static; background:none; padding:0; }
+    .overlay{ position:static; display:block; background:none; padding:0; overflow:visible; }
+    #invoice-panel tr{ break-inside:avoid; }
     .no-print{ display:none !important; }
   }
 
@@ -586,7 +593,7 @@
   <div class="disclaimer">
     <p><strong>How this page works.</strong> Data is cached in this browser only, separate from the savings ledger page. "Owed" money logged here isn't automatically added to that page's earnings log &mdash; add it there yourself once a student actually pays.</p>
     <p><strong>Payments.</strong> Enter what a parent hands you under "Received from parent" in that student's panel. It's applied to their oldest unpaid sessions first, so the page can show which sessions are covered and how much you're still to get. Sessions you marked paid before this existed stay counted as paid.</p>
-    <p><strong>Invoices</strong> list only what's still to get &mdash; sessions not yet covered by a payment, with any part-paid session showing just its remaining amount.</p>
+    <p><strong>Invoices</strong> list the student's classes and the payments received, then the net amount still due (or paid in advance). Sessions marked paid before payments existed are left off.</p>
   </div>
 </div>
 
@@ -609,13 +616,21 @@
         <div id="invoice-child-name">&mdash;</div>
       </div>
     </div>
+    <div class="inv-label">Classes</div>
     <table>
-      <thead><tr><th>Date</th><th>Time</th><th>Duration</th><th>Note</th><th class="num">Amount</th></tr></thead>
+      <thead><tr><th>Date</th><th>Time</th><th>Duration</th><th>Note</th><th class="num">Fee</th></tr></thead>
       <tbody id="invoice-rows"></tbody>
     </table>
+    <div class="inv-label">Payments received</div>
     <table>
+      <thead><tr><th>Date</th><th>Note</th><th class="num">Amount</th></tr></thead>
+      <tbody id="invoice-pay-rows"></tbody>
+    </table>
+    <table class="inv-summary">
       <tbody>
-        <tr class="total-row"><td colspan="4">Total due</td><td class="num" id="invoice-total"></td></tr>
+        <tr><td id="invoice-fee-label">Total fee</td><td class="num" id="invoice-fee"></td></tr>
+        <tr><td>Less: payments received</td><td class="num" id="invoice-received"></td></tr>
+        <tr class="total-row"><td id="invoice-net-label">Net amount due</td><td class="num" id="invoice-total"></td></tr>
       </tbody>
     </table>
     <div class="invoice-actions no-print">
@@ -1362,9 +1377,12 @@
     var child = childById(childId);
     if (!child) return;
 
-    var due = childTotals(childId).due;
-    var unpaid = state.entries.filter(function(e){ return e.childId === childId && due[e.id] > 0; })
+    // Sessions marked paid before payments existed have no payment row to
+    // offset them, so they stay off the invoice.
+    var classes = state.entries.filter(function(e){ return e.childId === childId && !e.paid; })
       .sort(function(a, b){ return (a.date + a.time).localeCompare(b.date + b.time); });
+    var payments = state.payments.filter(function(p){ return p.childId === childId; })
+      .sort(function(a, b){ return a.date.localeCompare(b.date); });
 
     $("invoice-number").textContent = "INV-" + child.id.toUpperCase().slice(0, 4) + "-" + todayISO().replace(/-/g, "");
     $("invoice-date").textContent = "Issued " + fmtDate(todayISO());
@@ -1373,27 +1391,46 @@
 
     var rows = $("invoice-rows");
     rows.innerHTML = "";
-    var total = 0;
-    if (!unpaid.length) {
-      rows.innerHTML = '<tr><td colspan="5" class="invoice-empty">No unpaid sessions for ' + escapeHtml(child.name) + '.</td></tr>';
+    var fee = 0;
+    if (!classes.length) {
+      rows.innerHTML = '<tr><td colspan="5" class="invoice-empty">No classes to bill for ' + escapeHtml(child.name) + '.</td></tr>';
     } else {
-      unpaid.forEach(function(entry){
-        var left = due[entry.id];
-        var partly = left < (Number(entry.amount) || 0);
-        total += left;
-        var noteText = (entry.note ? escapeHtml(entry.note) : "") +
-          (partly ? (entry.note ? " &middot; " : "") + "balance of " + fmt(entry.amount) : "");
+      classes.forEach(function(entry){
+        fee += Number(entry.amount) || 0;
         var tr = document.createElement("tr");
         tr.innerHTML =
           "<td>" + fmtDate(entry.date) + "</td>" +
           "<td>" + fmtTime(entry.time) + "</td>" +
           "<td>" + fmtDuration(entry.durationMinutes) + "</td>" +
-          "<td>" + (noteText || "&nbsp;") + "</td>" +
-          '<td class="num">' + fmt(left) + "</td>";
+          "<td>" + (entry.note ? escapeHtml(entry.note) : "&nbsp;") + "</td>" +
+          '<td class="num">' + fmt(entry.amount) + "</td>";
         rows.appendChild(tr);
       });
     }
-    $("invoice-total").textContent = fmt(total);
+
+    var payRows = $("invoice-pay-rows");
+    payRows.innerHTML = "";
+    var received = 0;
+    if (!payments.length) {
+      payRows.innerHTML = '<tr><td colspan="3" class="invoice-empty">No payments received yet.</td></tr>';
+    } else {
+      payments.forEach(function(p){
+        received += Number(p.amount) || 0;
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + fmtDate(p.date) + "</td>" +
+          "<td>" + (p.note ? escapeHtml(p.note) : "&nbsp;") + "</td>" +
+          '<td class="num">' + fmt(p.amount) + "</td>";
+        payRows.appendChild(tr);
+      });
+    }
+
+    var net = fee - received;
+    $("invoice-fee-label").textContent = "Total fee (" + classes.length + " " + (classes.length === 1 ? "class" : "classes") + ")";
+    $("invoice-fee").textContent = fmt(fee);
+    $("invoice-received").textContent = "− " + fmt(received);
+    $("invoice-net-label").textContent = net < 0 ? "Paid in advance" : "Net amount due";
+    $("invoice-total").textContent = fmt(Math.abs(net));
 
     $("invoice-overlay").hidden = false;
     var panel = $("invoice-panel");
